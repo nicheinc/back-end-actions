@@ -18,6 +18,7 @@ runs:
       with:
         repository: nicheinc/development
         ssh-key: ${{ inputs.gha-dev-key }}
+        submodules: recursive
 
     - name: Download docker image artifacts
       uses: actions/download-artifact@v3
@@ -44,11 +45,7 @@ runs:
       env:
         REGISTRY: ${{ inputs.ecr-registry }}
       shell: bash
-      run: |
-        ls
-        ls entity
-        ls entity/cmd/entity
-        docker-compose -f docker-compose.yml -f docker-compose.ci.yaml up -d ${SERVICES}
+      run: docker-compose -f docker-compose.yml -f docker-compose.ci.yaml up -d ${SERVICES}
 
     - name: api-proctor health check test
       env:
