@@ -38,14 +38,17 @@ runs:
         for service in ${SERVICES}; do
           echo -e "  ${service}:\n    image: ${service}:ci" >> docker-compose.ci.yaml
         done
-        cat ${{ inputs.ecr-registry }}
         echo $ENCODED_CREDENTIALS | base64 -di > vault/aws_credentials
 
     - name: Launch service with dependencies in docker-compose
       env:
         REGISTRY: ${{ inputs.ecr-registry }}
       shell: bash
-      run: docker-compose -f docker-compose.yml -f docker-compose.ci.yaml up -d ${SERVICES}
+      run: |
+        ls
+        ls entity
+        ls entity/cmd/entity
+        docker-compose -f docker-compose.yml -f docker-compose.ci.yaml up -d ${SERVICES}
 
     - name: api-proctor health check test
       env:
