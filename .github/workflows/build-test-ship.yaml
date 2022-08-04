@@ -179,7 +179,10 @@ jobs:
         env:
           REGISTRY: ${{ needs.amazon-ecr.outputs.registry }}
         shell: bash
-        run: docker-compose -f docker-compose.yml -f docker-compose.ci.yaml up -d ${SERVICES}
+        run: |
+          echo ${POSTGRES_PORT}
+          echo ${{ env.POSTGRES_PORT }}
+          docker-compose -f docker-compose.yml -f docker-compose.ci.yaml up -d ${SERVICES}
 
       - name: api-proctor health check test
         env:
