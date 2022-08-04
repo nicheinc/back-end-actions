@@ -141,6 +141,12 @@ jobs:
     name: Run api-proctor tests
     runs-on: ubuntu-latest
     needs: [amazon-ecr, build-and-ship-image]
+    env:
+      PGADMIN_PORT: 5000
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_SERVER: postgres
+      POSTGRES_PORT: 5432
     steps:
       - name: Checkout development repo
         uses: actions/checkout@v2
@@ -178,11 +184,6 @@ jobs:
       - name: api-proctor health check test
         env:
           ECR_REGISTRY: ${{ needs.amazon-ecr.outputs.registry }}
-          PGADMIN_PORT: 5000
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_SERVER: postgres
-          POSTGRES_PORT: 5432
         shell: bash
         run: |
           docker run \
