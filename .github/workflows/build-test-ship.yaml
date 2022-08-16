@@ -3,7 +3,13 @@ permissions:
   contents: read
 on:
   workflow_call:
-    # TODO: Pass services via inputs.
+    inputs:
+      services:
+        description: >
+          A JSON array containing the names of all services in the repo: the
+          eponymous microservice itself, any associated Kafka consumers, etc.
+        required: true
+        type: string
     secrets:
       DEV_AWS_CREDENTIALS:
         required: true
@@ -15,9 +21,6 @@ on:
         required: true
       SLACK_BOT_TOKEN:
         required: true
-
-env:
-  SERVICES: entity entity-updater algolia-updater
 
 jobs:
   # Retrieve the minimum Go version from go.mod and output a matrix of all Go
@@ -89,7 +92,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: ["entity", "entity-updater", "algolia-updater"]
+        service: ${{ fromJson(inputs.services) }}
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v2
