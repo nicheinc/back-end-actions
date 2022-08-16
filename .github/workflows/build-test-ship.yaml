@@ -1,0 +1,145 @@
+name: Build, Test, and Ship
+permissions:
+  contents: read
+on:
+  workflow_call:
+    # TODO: Pass services via inputs.
+    secrets:
+      DEV_AWS_CREDENTIALS:
+        required: true
+      ECR_ACCESS_KEY_ID:
+        required: true
+      ECR_SECRET_ACCESS_KEY:
+        required: true
+      GHA_DEV_KEY:
+        required: true
+      SLACK_BOT_TOKEN:
+        required: true
+
+env:
+  SERVICES: entity entity-updater algolia-updater
+
+jobs:
+  # Retrieve the minimum Go version from go.mod and output a matrix of all Go
+  # versions released since. Skip on release.
+  go-versions:
+    name: Get supported Go versions
+    runs-on: ubuntu-latest
+    if: ${{ !github.event.release }}
+    outputs:
+      matrix: ${{ steps.versions.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set Go versions
+        uses: arnested/go-version-action@v1
+        id: versions
+
+  # Run unit tests and go vet with each supported Go version. Skip on release.
+  unit-test-and-vet:
+    name: "Unit test and vet with Go ${{ matrix.go }}"
+    runs-on: ubuntu-latest
+    if: ${{ !github.event.release }}
+    needs: go-versions
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ${{ fromJSON(needs.go-versions.outputs.matrix) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Test
+        run: |
+          go test -v -cover -race ./...
+
+      - name: Vet
+        run: |
+          go vet ./...
+
+  amazon-ecr:
+    name: "Login to Amazon ECR"
+    runs-on: ubuntu-latest
+    outputs:
+      registry: ${{ steps.login-ecr.outputs.registry }}
+      test: test
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.ECR_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.ECR_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+  # Build the docker image if PR or push to dev/master, ships if Release
+  build-and-ship-image:
+    name: "Build ${{ matrix.service }} image"
+    runs-on: ubuntu-latest
+    needs: amazon-ecr
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ["entity", "entity-updater", "algolia-updater"]
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      # On push/PR, ensure service images can be built on target platforms.
+      - name: Build final images
+        uses: docker/build-push-action@v2
+        if: ${{ !github.event.release }}
+        with:
+          context: .
+          file: ./cmd/${{ matrix.service }}/Dockerfile
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+      # On release, build service images and push them to ECR.
+      - name: Build and ship final images
+        uses: docker/build-push-action@v2
+        if: ${{ github.event.release }}
+        env:
+          ECR_REGISTRY: ${{ needs.amazon-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ matrix.service }}
+          IMAGE_TAG: ${{ github.ref_name }}
+        with:
+          context: .
+          file: ./cmd/${{ matrix.service }}/Dockerfile
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+
+  # Post release status to #deployment.
+  update-slack:
+    name: Update Slack
+    runs-on: ubuntu-latest
+    needs: build-and-ship-image
+    if: ${{ github.event.release }}
+    steps:
+      - name: Post to a Slack channel
+        id: slack
+        uses: slackapi/slack-github-action@v1.17.0
+        with:
+          channel-id: 'C2C5JV162'
+          slack-message: "GitHub has built `${{ github.event.repository.name }}:${{ github.ref_name }}` for release. :shipitparrot: "
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
