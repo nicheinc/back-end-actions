@@ -70,6 +70,7 @@ jobs:
   build-and-ship-image:
     name: "Build ${{ matrix.service }} image"
     runs-on: ubuntu-latest
+    if: ${{ !github.event.pull_request.draft }}
     strategy:
       fail-fast: false
       matrix:
@@ -104,10 +105,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.ECR_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Login
+      - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
         if: ${{ github.event.release }}
+        uses: aws-actions/amazon-ecr-login@v1
 
       - name: Build and ship final images
         uses: docker/build-push-action@v2
