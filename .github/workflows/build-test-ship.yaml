@@ -71,7 +71,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       registry: ${{ steps.login-ecr.outputs.registry }}
-      test: test
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
