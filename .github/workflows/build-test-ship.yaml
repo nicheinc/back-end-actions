@@ -191,9 +191,7 @@ jobs:
       - name: Load docker images
         shell: bash
         run: |
-          echo Services: ${{ steps.parse-services.outputs.services }}
           for service in ${{ steps.parse-services.outputs.services }}; do
-            echo Loading service: ${service}
             docker load --input ${service}/${service}.tar
           done
 
