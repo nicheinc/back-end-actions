@@ -195,7 +195,7 @@ jobs:
           ENCODED_CREDENTIALS: ${{ secrets.DEV_AWS_CREDENTIALS }}
         shell: bash
         run: |
-          echo "services:" >> docker-compose.ci.yaml
+          echo -e "version: '3.7'\nservices:" >> docker-compose.ci.yaml
           for service in ${SERVICES}; do
             echo -e "  ${service}:\n    image: ${service}:ci" >> docker-compose.ci.yaml
           done
