@@ -183,10 +183,16 @@ jobs:
       - name: Download docker image artifacts
         uses: actions/download-artifact@v3
 
+      - name: Parse services into a space-separated string
+        id: parse-services
+        shell: bash
+        run: echo "::set-output name=services::`jq 'join(" ")' <<< '${{ inputs.services }}'`"
+
       - name: Load docker images
         shell: bash
         run: |
-          for service in ${SERVICES}; do
+          echo Services: ${{ steps.parse-services.outputs.services }}
+          for service in ${{ steps.parse-services.outputs.services }}; do
             docker load --input ${service}/${service}.tar
           done
 
@@ -196,7 +202,7 @@ jobs:
         shell: bash
         run: |
           echo -e "version: '3.7'\nservices:" >> docker-compose.ci.yaml
-          for service in ${SERVICES}; do
+          for service in ${{ steps.parse-services.outputs.services }}; do
             echo -e "  ${service}:\n    image: ${service}:ci" >> docker-compose.ci.yaml
           done
           echo $ENCODED_CREDENTIALS | base64 -di > vault/aws_credentials
@@ -205,7 +211,7 @@ jobs:
         env:
           REGISTRY: ${{ needs.amazon-ecr.outputs.registry }}
         shell: bash
-        run: docker-compose -f docker-compose.yml -f docker-compose.ci.yaml up -d ${SERVICES}
+        run: docker-compose -f docker-compose.yml -f docker-compose.ci.yaml up -d ${{ steps.parse-services.outputs.services }}
 
       - name: api-proctor health check test
         env:
@@ -227,7 +233,7 @@ jobs:
           docker-compose logs kafka || echo "Kafka not running"
           echo "--- Postgres logs ---"
           docker-compose logs postgres || echo "Postgres not running"
-          for service in ${SERVICES}; do
+          for service in ${{ steps.parse-services.outputs.services }}; do
             echo "--- ${service} logs ---"
             docker-compose logs ${service}
           done
