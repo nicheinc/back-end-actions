@@ -186,7 +186,7 @@ jobs:
       - name: Parse services into a space-separated string
         id: parse-services
         shell: bash
-        run: echo "::set-output name=services::`jq 'join(" ")' <<< '${{ inputs.services }}'`"
+        run: echo "::set-output name=services::`jq -r 'join(" ")' <<< '${{ inputs.services }}'`"
 
       - name: Load docker images
         shell: bash
