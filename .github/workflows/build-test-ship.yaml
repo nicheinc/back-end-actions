@@ -149,7 +149,7 @@ jobs:
         uses: docker/build-push-action@v2
         if: ${{ github.event.release }}
         env:
-          ECR_REGISTRY: ${{ needs.amazon-ecr.outputs.registry }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ matrix.service }}
           IMAGE_TAG: ${{ github.ref_name }}
         with:
