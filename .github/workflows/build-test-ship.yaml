@@ -204,6 +204,12 @@ jobs:
       - name: Trim down docker-compose.yml
         run: yq -i 'del(.services.*.build, .services.*.env_file)' docker-compose.yml
 
+      # TODO: Once we update the development repo itself to use latest images
+      # from ECR (https://app.asana.com/0/1199932090708798/1202699911962363/f),
+      # this step will be unnecessary.
+      - name: Use latest service images from ECR
+        run: sed -i 's/${USER:?USER}/${{ needs.amazon-ecr.outputs.registry }}/' docker-compose.yml
+
       - name: Create docker-compose override and AWS credentials files
         env:
           ENCODED_CREDENTIALS: ${{ secrets.DEV_AWS_CREDENTIALS }}
