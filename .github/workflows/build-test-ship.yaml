@@ -195,6 +195,15 @@ jobs:
             docker load --input ${service}/${service}.tar
           done
 
+      - name: Set up yq for YAML processing
+        uses: mikefarah/yq@v4.27.3
+
+      # We only use docker-compose.yml for its dependency graph, not for build
+      # configuration. Since we don't check out submodules, we need to remove
+      # any references to submodule files.
+      - name: Trim down docker-compose.yml
+        run: yq -i 'del(.services.*.build, .services.*.env_file)' docker-compose.yml
+
       - name: Create docker-compose override and AWS credentials files
         env:
           ENCODED_CREDENTIALS: ${{ secrets.DEV_AWS_CREDENTIALS }}
