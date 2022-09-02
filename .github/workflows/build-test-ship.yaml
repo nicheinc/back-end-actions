@@ -17,7 +17,7 @@ on:
         required: true
       ECR_SECRET_ACCESS_KEY:
         required: true
-      GHA_DEV_KEY:
+      NPM_WRITE_TOKEN:
         required: true
       SLACK_BOT_TOKEN:
         required: true
@@ -178,7 +178,8 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: nicheinc/development
-          ssh-key: ${{ secrets.GHA_DEV_KEY }}
+          token: ${{ secrets.NPM_WRITE_TOKEN }}
+          submodules: true
 
       - name: Download docker image artifacts
         uses: actions/download-artifact@v3
