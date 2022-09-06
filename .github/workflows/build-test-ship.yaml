@@ -215,11 +215,13 @@ jobs:
           touch vault/website.secrets.env
           touch vault/landingpageadmin.secrets.env
 
-      - name: Launch service with dependencies in docker-compose
+      - name: Launch services with dependencies via docker-compose
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         shell: bash
-        run: docker-compose -f docker-compose.yml -f docker-compose.ci.yaml up -d ${{ steps.parse-services.outputs.services }}
+        run: |
+          docker-compose pull
+          docker-compose -f docker-compose.yml -f docker-compose.ci.yaml up -d ${{ steps.parse-services.outputs.services }}
 
       - name: API Proctor health check test
         env:
