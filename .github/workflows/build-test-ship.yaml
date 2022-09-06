@@ -213,6 +213,15 @@ jobs:
           done
           echo $ENCODED_CREDENTIALS | base64 -di > vault/aws_credentials
 
+      # TODO: This is a hack to place empty secret files in the vault directory
+      # (to satisfy docker-compose.yml requirements) without actually retrieving
+      # them from vault.
+      - name: Retrieve vault secrets
+        shell: bash
+        run: |
+          touch vault/website.secrets.env
+          touch vault/landingpageadmin.secrets.env
+
       - name: Launch service with dependencies in docker-compose
         env:
           REGISTRY: ${{ needs.amazon-ecr.outputs.registry }}
