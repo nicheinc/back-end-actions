@@ -223,6 +223,10 @@ jobs:
           docker-compose pull
           docker-compose -f docker-compose.yml -f docker-compose.ci.yaml up -d ${{ steps.parse-services.outputs.services }}
 
+      - name: View entity logs, for debugging
+        shell: bash
+        run: docker-compose logs entity
+
       - name: API Proctor health check test
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
