@@ -220,8 +220,8 @@ jobs:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         shell: bash
         run: |
-          docker-compose pull
-          docker-compose -f docker-compose.yml -f docker-compose.ci.yaml up -d ${{ steps.parse-services.outputs.services }}
+          docker-compose -f docker-compose.yml -f docker-compose.ci.yaml \
+            up -d ${{ steps.parse-services.outputs.services }}
 
       - name: View entity logs, for debugging
         shell: bash
