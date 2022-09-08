@@ -234,7 +234,9 @@ jobs:
             docker-compose up -d postgres
             docker-compose logs postgres
             docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres psql -h 0.0.0.0 -U ${POSTGRES_USER} -c \
-              "CREATE DATABASE ${db}; COMMIT; CREATE ROLE ${username} LOGIN PASSWORD '${password}'; COMMIT"
+              "CREATE DATABASE ${db}"
+            docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres psql -h 0.0.0.0 -U ${POSTGRES_USER} -c \
+              "CREATE ROLE ${username} LOGIN PASSWORD '${password}'"
           done
 
       - name: Launch services with dependencies via docker-compose
