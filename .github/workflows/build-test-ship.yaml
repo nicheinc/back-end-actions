@@ -216,6 +216,25 @@ jobs:
           touch vault/website.secrets.env
           touch vault/landingpageadmin.secrets.env
 
+      - name: Create service databases and roles
+        shell: bash
+        run: |
+          # Parse unique usernames, passwords, and DBs from POSTGRES_CONNECTION strings.
+          declare -A db_info
+          while read -r line; do
+            regex='postgres://(\w*):(\w*)@\$\{POSTGRES_SERVER\}/(\w*)'
+            if [[ $line =~ $regex ]]; then
+              # Map username to the associated password and DB.
+              db_info[${BASH_REMATCH[1]}]=${BASH_REMATCH[@]:2:2}
+            fi
+          done < <(grep POSTGRES_CONNECTION docker-compose.yml)
+          for username in "${!db_info[@]}"; do
+            read -r password db <<<$(echo ${db_info[$username]})
+            # Create database and role.
+            psql -c "CREATE DATABASE IF NOT EXISTS $db"
+            psql -c "CREATE ROLE $username LOGIN PASSWORD $password"
+          done
+
       - name: Launch services with dependencies via docker-compose
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
