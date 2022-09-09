@@ -263,12 +263,9 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         shell: bash
         run: |
-          docker run \
-            --rm \
-            --name api-proctor \
-            --network host \
+          docker run --rm --name api-proctor --network host \
             $ECR_REGISTRY/api-proctor:v1.3.0 \
-            ${{ github.event.repository.name }}/health.get --testPathIgnorePatterns=/src/ --passWithNoTests
+            ${{ github.event.repository.name }} --testPathIgnorePatterns=/src/ --passWithNoTests
 
       - name: Docker Compose logs
         shell: bash
