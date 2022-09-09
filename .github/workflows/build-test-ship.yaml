@@ -231,11 +231,9 @@ jobs:
           for username in "${!db_info[@]}"; do
             read -r password db <<<$(echo ${db_info[${username}]})
             # Start postgres in docker and create database and role.
-            docker-compose up -d postgres
-            docker-compose logs postgres
-            docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres psql -h 0.0.0.0 -U ${POSTGRES_USER} -c \
+            docker-compose exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres psql -h 0.0.0.0 -U ${POSTGRES_USER} -c \
               "CREATE DATABASE ${db}"
-            docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres psql -h 0.0.0.0 -U ${POSTGRES_USER} -c \
+            docker-compose exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres psql -h 0.0.0.0 -U ${POSTGRES_USER} -c \
               "CREATE ROLE ${username} LOGIN PASSWORD '${password}'"
           done
 
