@@ -248,6 +248,12 @@ jobs:
           docker-compose -f docker-compose.yml -f docker-compose.ci.yaml \
             up -d ${{ steps.parse-services.outputs.services }}
 
+      - name: View kafka logs, for debugging
+        shell: bash
+        run: |
+          docker-compose ps | grep kafka
+          docker-compose logs kafka
+
       - name: View entity logs, for debugging
         shell: bash
         run: docker-compose logs entity
