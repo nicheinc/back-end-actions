@@ -265,7 +265,7 @@ jobs:
         run: |
           docker run --rm --name api-proctor --network host \
             $ECR_REGISTRY/api-proctor:v1.3.0 \
-            ${{ github.event.repository.name }} --testPathIgnorePatterns=/src/ --passWithNoTests
+            tests/${{ github.event.repository.name }}/ --testPathIgnorePatterns=/src/ --passWithNoTests
 
       - name: Docker Compose logs
         shell: bash
