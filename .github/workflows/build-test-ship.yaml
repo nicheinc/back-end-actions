@@ -264,8 +264,8 @@ jobs:
         shell: bash
         run: |
           docker run --rm --name api-proctor --network host \
-            -e READ_POSTGRES_CONNECTION=postgres://postgres:prowl3r@localhost:5432 \
-            -e WRITE_POSTGRES_CONNECTION=postgres://postgres:prowl3r@localhost:5432 \
+            -e READ_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
+            -e WRITE_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
             $ECR_REGISTRY/api-proctor:v1.3.0 \
             tests/${{ github.event.repository.name }}/ --testPathIgnorePatterns=/src/ --passWithNoTests
 
