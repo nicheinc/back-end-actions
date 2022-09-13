@@ -267,7 +267,7 @@ jobs:
             -e READ_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
             -e WRITE_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
             $ECR_REGISTRY/api-proctor:latest \
-            tests/${{ github.event.repository.name }}/ --testPathIgnorePatterns=/src/ --passWithNoTests
+            tests/${{ github.event.repository.name }}/health.get --testPathIgnorePatterns=/src/ --passWithNoTests
 
       - name: Docker Compose logs
         shell: bash
