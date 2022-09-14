@@ -266,7 +266,7 @@ jobs:
           docker run --rm --name api-proctor --network host \
             -e READ_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
             -e WRITE_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
-            $ECR_REGISTRY/api-proctor:latest \
+            $ECR_REGISTRY/api-proctor:dev-19dea32 \
             tests/${{ github.event.repository.name }}/health.get --testPathIgnorePatterns=/src/ --passWithNoTests
 
       - name: Docker Compose logs
