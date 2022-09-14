@@ -248,15 +248,9 @@ jobs:
           docker-compose -f docker-compose.yml -f docker-compose.ci.yaml \
             up -d ${{ steps.parse-services.outputs.services }}
 
-      - name: View kafka logs, for debugging
+      - name: View service logs, for debugging
         shell: bash
-        run: |
-          docker-compose ps | grep kafka
-          docker-compose logs kafka
-
-      - name: View entity logs, for debugging
-        shell: bash
-        run: docker-compose logs entity
+        run: docker-compose logs ${{ github.event.repository.name }}
 
       - name: Run API Proctor tests
         env:
@@ -267,7 +261,7 @@ jobs:
             -e READ_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
             -e WRITE_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
             $ECR_REGISTRY/api-proctor:latest \
-            tests/${{ github.event.repository.name }}/health.get --testPathIgnorePatterns=/src/ --passWithNoTests --runInBand
+            tests/${{ github.event.repository.name }}/health.get --testPathIgnorePatterns=/src/ --passWithNoTests
 
       - name: Docker Compose logs
         shell: bash
