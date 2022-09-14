@@ -258,6 +258,10 @@ jobs:
         shell: bash
         run: docker-compose logs entity
 
+      - name: Manually call entity health check
+        shell: bash
+        run: curl -v http://localhost:34000/health
+
       - name: Run API Proctor tests
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
