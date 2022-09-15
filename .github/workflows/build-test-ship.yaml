@@ -237,8 +237,9 @@ jobs:
               "CREATE DATABASE ${db}"
             docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres psql -h 0.0.0.0 -U ${POSTGRES_USER} -c \
               "CREATE ROLE ${username} LOGIN PASSWORD '${password}'"
+            docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres psql -h 0.0.0.0 -U ${POSTGRES_USER} -c \
+              "CREATE EXTENSION 'uuid-ossp'"
           done
-          sleep 20s
 
       - name: Build services with dependencies via docker-compose
         env:
@@ -253,7 +254,7 @@ jobs:
         shell: bash
         run: |
           docker-compose up -d ${{ steps.parse-services.outputs.services }}
-          sleep 1m
+          sleep 20s
       
       - name: View fact logs, for debugging
         shell: bash
