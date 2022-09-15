@@ -216,10 +216,12 @@ jobs:
           touch vault/website.secrets.env
           touch vault/landingpageadmin.secrets.env
 
-      - name: Create service databases and roles
+      - name: Start postgres and create service databases and roles
         shell: bash
         run: |
-          # Parse unique usernames, passwords, and DBs from POSTGRES_CONNECTION strings.
+          docker-compose up -d postgres
+          # Parse usernames, passwords, and DBs from POSTGRES_CONNECTION
+          # strings, deduplicated by username.
           declare -A db_info
           while read -r line; do
             regex='postgres://(\w*):(\w*)@\$\{POSTGRES_SERVER\}/(\w*)'
@@ -228,11 +230,11 @@ jobs:
               db_info[${BASH_REMATCH[1]}]=${BASH_REMATCH[@]:2:2}
             fi
           done < <(grep POSTGRES_CONNECTION docker-compose.yml)
+          # Wait for postgres to accept connections
+          timeout 1m bash -c 'until docker-compose run postgres pg_isready -d postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres; do sleep 5s; done'
+          # Create databases and roles
           for username in "${!db_info[@]}"; do
             read -r password db <<<$(echo ${db_info[${username}]})
-            # Start postgres in docker and create database and role.
-            docker-compose up -d postgres
-            docker-compose logs postgres
             docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres psql -h 0.0.0.0 -U ${POSTGRES_USER} -c \
               "CREATE DATABASE ${db}"
             docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres psql -h 0.0.0.0 -U ${POSTGRES_USER} -c \
