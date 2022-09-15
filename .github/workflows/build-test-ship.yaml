@@ -248,20 +248,6 @@ jobs:
           docker-compose -f docker-compose.yml -f docker-compose.ci.yaml \
             up -d ${{ steps.parse-services.outputs.services }}
 
-      - name: View kafka logs, for debugging
-        shell: bash
-        run: |
-          docker-compose ps | grep kafka
-          docker-compose logs kafka
-
-      - name: View entity logs, for debugging
-        shell: bash
-        run: docker-compose logs entity
-
-      - name: Manually call entity health check
-        shell: bash
-        run: curl -v http://localhost:34000/health
-
       - name: Run API Proctor tests
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
