@@ -270,7 +270,7 @@ jobs:
           docker run --rm --name api-proctor --network host \
             -e READ_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
             -e WRITE_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
-            -e NODE_ENV=ci
+            -e NODE_ENV=ci \
             $ECR_REGISTRY/api-proctor:latest \
             tests/${{ github.event.repository.name }}/ --testPathIgnorePatterns=/src/ --passWithNoTests
 
