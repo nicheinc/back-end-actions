@@ -239,12 +239,18 @@ jobs:
               "CREATE ROLE ${username} LOGIN PASSWORD '${password}'"
           done
 
-      - name: Launch services with dependencies via docker-compose
+      - name: Build services with dependencies via docker-compose
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         shell: bash
         run: |
           docker-compose pull --include-deps ${{ steps.parse-services.outputs.services }}
+
+      - name: Launch services via docker-compose
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        shell: bash
+        run: |
           docker-compose up -d ${{ steps.parse-services.outputs.services }}
 
       - name: Run API Proctor tests
