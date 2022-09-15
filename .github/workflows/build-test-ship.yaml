@@ -254,6 +254,22 @@ jobs:
         run: |
           docker-compose up -d ${{ steps.parse-services.outputs.services }}
           sleep 1m
+      
+      - name: Manually call fact health check
+        shell: bash
+        run: curl -v http://localhost:4003/health
+
+      - name: Run API Proctor health check test
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        shell: bash
+        run: |
+          docker run --rm --name api-proctor --network host \
+            -e READ_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
+            -e WRITE_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
+            -e NODE_ENV=ci \
+            $ECR_REGISTRY/api-proctor:latest \
+            tests/${{ github.event.repository.name }}/health.get --testPathIgnorePatterns=/src/ --passWithNoTests
 
       - name: Run API Proctor tests
         env:
