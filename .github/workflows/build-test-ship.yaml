@@ -201,9 +201,9 @@ jobs:
           ENCODED_CREDENTIALS: ${{ secrets.DEV_AWS_CREDENTIALS }}
         shell: bash
         run: |
-          echo -e "version: '3.7'\nservices:" >> docker-compose.ci.yaml
+          echo -e "version: '3.7'\nservices:" > docker-compose.override.yaml
           for service in ${{ steps.parse-services.outputs.services }}; do
-            echo -e "  ${service}:\n    image: ${service}:ci" >> docker-compose.ci.yaml
+            echo -e "  ${service}:\n    image: ${service}:ci" >> docker-compose.override.yaml
           done
           echo $ENCODED_CREDENTIALS | base64 -di > vault/aws_credentials
 
@@ -245,12 +245,7 @@ jobs:
         shell: bash
         run: |
           docker-compose pull --include-deps ${{ steps.parse-services.outputs.services }}
-          docker-compose -f docker-compose.yml -f docker-compose.ci.yaml \
-            up -d ${{ steps.parse-services.outputs.services }}
-
-      - name: View service logs, for debugging
-        shell: bash
-        run: docker-compose logs ${{ github.event.repository.name }}
+          docker-compose up -d ${{ steps.parse-services.outputs.services }}
 
       - name: Run API Proctor tests
         env:
@@ -260,8 +255,9 @@ jobs:
           docker run --rm --name api-proctor --network host \
             -e READ_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
             -e WRITE_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
+            -e NODE_ENV=ci \
             $ECR_REGISTRY/api-proctor:latest \
-            tests/${{ github.event.repository.name }}/health.get --testPathIgnorePatterns=/src/ --passWithNoTests
+            tests/${{ github.event.repository.name }}/ --testPathIgnorePatterns=/src/ --passWithNoTests
 
       - name: Docker Compose logs
         shell: bash
