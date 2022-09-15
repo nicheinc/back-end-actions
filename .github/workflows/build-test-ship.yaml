@@ -255,6 +255,10 @@ jobs:
           docker-compose up -d ${{ steps.parse-services.outputs.services }}
           sleep 1m
       
+      - name: View fact logs, for debugging
+        shell: bash
+        run: docker-compose logs fact
+
       - name: Manually call fact health check
         shell: bash
         run: curl -v http://localhost:4003/health
