@@ -238,6 +238,7 @@ jobs:
             docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres psql -h 0.0.0.0 -U ${POSTGRES_USER} -c \
               "CREATE ROLE ${username} LOGIN PASSWORD '${password}'"
           done
+          sleep 20s
 
       - name: Build services with dependencies via docker-compose
         env:
@@ -252,6 +253,7 @@ jobs:
         shell: bash
         run: |
           docker-compose up -d ${{ steps.parse-services.outputs.services }}
+          sleep 1m
 
       - name: Run API Proctor tests
         env:
