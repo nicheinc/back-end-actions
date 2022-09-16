@@ -262,7 +262,7 @@ jobs:
                   psql -h 0.0.0.0 -U ${POSTGRES_USER} -a -c \
                   "CREATE ROLE ${role} LOGIN PASSWORD '${password}'"
               else
-                echo ${role} role already exists
+                echo ${role} role already created
               fi
             fi
           done
