@@ -216,6 +216,18 @@ jobs:
           touch vault/website.secrets.env
           touch vault/landingpageadmin.secrets.env
 
+      - name: Set up yq for YAML processing
+        uses: mikefarah/yq@v4.27.3
+
+      - name: Parse service dependencies
+        id: parse-deps
+        run: |
+          keys=(${{ steps.parse-services.outputs.services }})
+          keys=${keys[@]/#/.}
+          keys=${keys// /,}
+          deps=$(yq ".services | (${keys}) | .depends_on" docker-compose.yml | sort | uniq)
+          echo "::set-output name=dependencies::$deps"
+
       - name: Start postgres and create service databases and roles
         shell: bash
         run: |
