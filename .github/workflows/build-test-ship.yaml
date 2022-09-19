@@ -247,20 +247,21 @@ jobs:
                 dbs[${db}]=1
                 docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
                   psql -h 0.0.0.0 -U ${POSTGRES_USER} -a -c "CREATE DATABASE ${db}"
-                docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
-                  psql -h 0.0.0.0 -U ${POSTGRES_USER} -a -c 'CREATE EXTENSION "uuid-ossp"'
               else
                 echo ${db} database already initialized
               fi
               if [[ ! ${roles[${role}]} ]]; then
                 roles[${role}]=1
-                  docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
-                  psql -h 0.0.0.0 -U ${POSTGRES_USER} -a -c \
-                  "CREATE ROLE fact_service LOGIN PASSWORD '${password}'"
+
               else
                 echo ${role} role already created
               fi
             fi
+            docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
+              psql -h 0.0.0.0 -U ${POSTGRES_USER} -a -c 'CREATE EXTENSION "uuid-ossp"'
+            docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
+              psql -h 0.0.0.0 -U ${POSTGRES_USER} -a -c \
+              "CREATE ROLE fact_service LOGIN PASSWORD 'prowl3r'"
           done
 
       - name: Build services with dependencies via docker-compose
