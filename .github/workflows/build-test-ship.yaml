@@ -254,9 +254,9 @@ jobs:
               fi
               if [[ ! ${roles[${role}]} ]]; then
                 roles[${role}]=1
-                docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
+                  docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
                   psql -h 0.0.0.0 -U ${POSTGRES_USER} -a -c \
-                  "CREATE ROLE ${role} LOGIN PASSWORD '${password}'"
+                  "CREATE ROLE fact_service LOGIN PASSWORD '${password}'"
               else
                 echo ${role} role already created
               fi
