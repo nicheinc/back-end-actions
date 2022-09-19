@@ -254,7 +254,7 @@ jobs:
         run: |
           pwd
           docker-compose up -d postgres
-          timeout 1m bash -c 'until docker-compose run postgres pg_isready -d postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres; do sleep 5s; done'
+          timeout 1m bash -c 'until docker-compose run postgres pg_isready -d postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres; do sleep 1s; done'
           declare -A dbs
           declare -A roles
           conn_regex='postgres://(\w*):(\w*)@\$\{POSTGRES_SERVER\}/(\w*)'
