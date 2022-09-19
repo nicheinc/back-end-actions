@@ -252,14 +252,9 @@ jobs:
               else
                 echo ${db} database already initialized
               fi
-              if [[ ! ${roles[${role}]} ]]; then
-                roles[${role}]=1
-                docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
-                  psql -h 0.0.0.0 -U ${POSTGRES_USER} -a -c \
-                  "CREATE ROLE fact_service LOGIN PASSWORD 'prowl3r'"
-              else
-                echo ${role} role already created
-              fi
+              docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
+                psql -h 0.0.0.0 -U ${POSTGRES_USER} -a -c \
+                "CREATE ROLE fact_service LOGIN PASSWORD 'prowl3r'"
             fi
           done
 
