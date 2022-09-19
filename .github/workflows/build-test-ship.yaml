@@ -33,7 +33,7 @@ jobs:
       matrix: ${{ steps.versions.outputs.matrix }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set Go versions
         uses: arnested/go-version-action@v1
@@ -51,7 +51,7 @@ jobs:
         go: ${{ fromJSON(needs.go-versions.outputs.matrix) }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Install Go
         uses: actions/setup-go@v3
@@ -76,7 +76,7 @@ jobs:
         service: ${{ fromJson(inputs.services) }}
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -158,11 +158,12 @@ jobs:
       POSTGRES_PORT: 5432
     steps:
       - name: Checkout development repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: nicheinc/development
           token: ${{ secrets.NPM_WRITE_TOKEN }}
           submodules: true
+          ref: x/read-only-bool
 
       - name: Download docker image artifacts
         uses: actions/download-artifact@v3
