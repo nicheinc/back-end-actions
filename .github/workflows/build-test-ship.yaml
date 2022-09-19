@@ -248,10 +248,14 @@ jobs:
                 docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
                   psql -h 0.0.0.0 -U ${POSTGRES_USER} -a -c "CREATE DATABASE ${db}"
                 docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
-                  psql -h 0.0.0.0 -U ${POSTGRES_USER} -a -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp"'
+                  psql -h 0.0.0.0 -U ${POSTGRES_USER} -d ${db} -a -c \
+                  'CREATE EXTENSION IF NOT EXISTS "uuid-ossp"'
               else
                 echo ${db} database already initialized
               fi
+              docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
+                psql -h 0.0.0.0 -U ${POSTGRES_USER} -a -c \
+                "DROP ROLE IF EXISTS fact_service'"
               docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
                 psql -h 0.0.0.0 -U ${POSTGRES_USER} -a -c \
                 "CREATE ROLE fact_service LOGIN PASSWORD 'prowl3r'"
