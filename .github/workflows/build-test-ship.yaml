@@ -272,8 +272,9 @@ jobs:
                 context=$(yq ".services.${dependency}.build.context" docker-compose.yml)
                 extensions="${context}/sql/extensions.sql"
                 if [[ -f ${extensions} ]]; then
+                  docker compose cp ${extensions} postgres:extensions.sql
                   docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
-                    psql -h 0.0.0.0 -U ${POSTGRES_USER} -d ${db} -a -f ${extensions}
+                    psql -h 0.0.0.0 -U ${POSTGRES_USER} -d ${db} -a -f extensions.sql
                 fi
               else
                 echo ${db} database already initialized
