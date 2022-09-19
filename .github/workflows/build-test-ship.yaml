@@ -239,9 +239,9 @@ jobs:
             deps[${next}]=1
             next_deps=$(yq ".services.${next}.depends_on" docker-compose.yml | sort | uniq)
             for next_dep in ${next_deps}; do
-              if [[ ! ${deps[${next_dep}]} ]]; do
+              if [[ ! ${deps[${next_dep}]} ]]; then
                 work_set[${next_dep}]=1
-              done
+              fi
             done
           done
           echo "::set-output name=deps::${!deps[@]}"
