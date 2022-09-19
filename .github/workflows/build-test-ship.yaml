@@ -244,6 +244,7 @@ jobs:
               fi
             done
           done
+          echo Dependencies: ${!deps[@]}
           echo "::set-output name=deps::${!deps[@]}"
 
       - name: Start postgres and create service databases and roles
