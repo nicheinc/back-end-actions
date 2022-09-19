@@ -237,11 +237,9 @@ jobs:
             unset work_set[${next}]
             # Add the next node to the dependency set, and add any of its
             # unvisited dependencies to the work set.
-            echo Visiting ${next}...
             deps[${next}]=1
             next_deps=$(yq ".services.${next}.depends_on[]" docker-compose.yml | sort | uniq)
             for next_dep in ${next_deps}; do
-              echo ...depends on ${next_dep}
               if [[ ! ${deps[${next_dep}]} ]]; then
                 work_set[${next_dep}]=1
               fi
@@ -253,7 +251,6 @@ jobs:
       - name: Start postgres and create service databases and roles
         shell: bash
         run: |
-          pwd
           docker-compose up -d postgres
           timeout 1m bash -c 'until docker-compose run postgres pg_isready -d postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres; do sleep 1s; done'
           declare -A dbs
