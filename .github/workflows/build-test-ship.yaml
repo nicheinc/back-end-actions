@@ -238,15 +238,13 @@ jobs:
             # unvisited dependencies to the work set.
             echo Visiting ${next}...
             deps[${next}]=1
-            next_deps=$(yq ".services.${next}.depends_on" docker-compose.yml | sort | uniq)
-            if [[ ${next_deps} != null ]]; then
-              for next_dep in ${next_deps}; do
-                echo ...depends on ${next_dep}
-                if [[ ! ${deps[${next_dep}]} ]]; then
-                  work_set[${next_dep}]=1
-                fi
-              done
-            fi
+            next_deps=$(yq ".services.${next}.depends_on[]" docker-compose.yml | sort | uniq)
+            for next_dep in ${next_deps}; do
+              echo ...depends on ${next_dep}
+              if [[ ! ${deps[${next_dep}]} ]]; then
+                work_set[${next_dep}]=1
+              fi
+            done
           done
           echo Dependencies: ${!deps[@]}
           echo "::set-output name=deps::${!deps[@]}"
