@@ -249,6 +249,8 @@ jobs:
               "CREATE DATABASE ${db}"
             docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres psql -h 0.0.0.0 -U ${POSTGRES_USER} -c \
               "CREATE ROLE ${username} LOGIN PASSWORD '${password}'"
+            docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres psql -h 0.0.0.0 -U ${POSTGRES_USER} -c \
+              "CREATE ROLE dynamicfacttransporter"
             docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres psql -h 0.0.0.0 -U ${POSTGRES_USER} -d ${db} -c \
               'CREATE EXTENSION IF NOT EXISTS "uuid-ossp"'
           done
