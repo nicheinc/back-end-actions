@@ -258,7 +258,7 @@ jobs:
               fi
             fi
             docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
-              psql -h 0.0.0.0 -U ${POSTGRES_USER} -a -c 'CREATE EXTENSION "uuid-ossp"'
+              psql -h 0.0.0.0 -U ${POSTGRES_USER} -a -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp"'
             docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
               psql -h 0.0.0.0 -U ${POSTGRES_USER} -a -c \
               "CREATE ROLE fact_service LOGIN PASSWORD 'prowl3r'"
