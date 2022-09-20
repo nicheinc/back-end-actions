@@ -267,12 +267,6 @@ jobs:
                 docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
                   psql -h 0.0.0.0 -U ${POSTGRES_USER} -a -c "CREATE DATABASE ${db}"
                 context=$(yq ".services.${dependency}.build.context" docker-compose.yml)
-                roles="${context}/sql/roles.sql"
-                if [[ -f ${roles} ]]; then
-                  docker compose cp ${roles} postgres:roles.sql
-                  docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
-                    psql -h 0.0.0.0 -U ${POSTGRES_USER} -d ${db} -a -f roles.sql
-                fi
                 extensions="${context}/sql/extensions.sql"
                 if [[ -f ${extensions} ]]; then
                   docker compose cp ${extensions} postgres:extensions.sql
