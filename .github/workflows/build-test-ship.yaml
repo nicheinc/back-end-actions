@@ -296,6 +296,10 @@ jobs:
           docker-compose pull --include-deps ${{ steps.parse-services.outputs.services }}
           docker-compose up -d ${{ steps.parse-services.outputs.services }}
 
+      - name: View service logs, for debugging
+        shell: bash
+        run: docker-compose logs ${{ matrix.service }}
+
       - name: Run API Proctor tests
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
