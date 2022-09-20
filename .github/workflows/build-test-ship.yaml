@@ -163,7 +163,7 @@ jobs:
           repository: nicheinc/development
           token: ${{ secrets.NPM_WRITE_TOKEN }}
           submodules: true
-          ref: x/read-only-bool
+          ref: x/fact-dynamicfacttransporter-role
 
       - name: Download docker image artifacts
         uses: actions/download-artifact@v3
