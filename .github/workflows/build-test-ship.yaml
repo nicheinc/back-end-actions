@@ -308,6 +308,7 @@ jobs:
             tests/${{ github.event.repository.name }}/ --testPathIgnorePatterns=/src/ --passWithNoTests
 
       - name: Docker Compose logs
+        if: success() || failure()
         shell: bash
         run: |
           echo "::group::Docker ${{ github.event.repository.name }} logs"
