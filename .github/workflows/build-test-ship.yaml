@@ -254,7 +254,6 @@ jobs:
           docker-compose up -d postgres
           timeout 1m bash -c 'until docker-compose run postgres pg_isready -d postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres; do sleep 1s; done'
           declare -A dbs
-          declare -A roles
           conn_regex='postgres://(\w*):(\w*)@\$\{POSTGRES_SERVER\}/(\w*)'
           for dependency in ${{ steps.parse-deps.outputs.deps }}; do
             # Parse role, password, and DB from POSTGRES_CONNECTION.
@@ -272,7 +271,7 @@ jobs:
                 if [[ -f ${roles} ]]; then
                   docker compose cp ${roles} postgres:roles.sql
                   docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
-                    psql -h 0.0.0.0 -U ${POSTGRES_USER} -a -f roles.sql
+                    psql -h 0.0.0.0 -U ${POSTGRES_USER} -d ${db} -a -f roles.sql
                 fi
                 extensions="${context}/sql/extensions.sql"
                 if [[ -f ${extensions} ]]; then
