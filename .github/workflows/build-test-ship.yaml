@@ -237,7 +237,7 @@ jobs:
             # Add the next node to the dependency set, and add any of its
             # unvisited dependencies to the work set.
             deps[${next}]=1
-            next_deps=$(yq ".services.${next}.depends_on[]" docker-compose.yml | sort | uniq)
+            next_deps=$(yq ".services.${next}.depends_on[]" docker-compose.yml)
             for next_dep in ${next_deps}; do
               if [[ ! ${deps[${next_dep}]} ]]; then
                 work_set[${next_dep}]=1
