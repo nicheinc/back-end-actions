@@ -10,6 +10,10 @@ on:
           eponymous microservice itself, any associated Kafka consumers, etc.
         required: true
         type: string
+      api-proctor-timeout-minutes:
+        description: The timeout in minutes for running API Proctor tests.
+        default: 30
+        type: number
     secrets:
       DEV_AWS_CREDENTIALS:
         required: true
@@ -150,6 +154,7 @@ jobs:
     name: Run api-proctor tests
     runs-on: ubuntu-latest
     needs: build-and-ship-image
+    timeout-minutes: ${{ inputs.api-proctor-timeout-minutes }}
     env:
       PGADMIN_PORT: 5000
       POSTGRES_USER: postgres
