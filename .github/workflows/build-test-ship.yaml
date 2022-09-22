@@ -145,7 +145,7 @@ jobs:
       fail-fast: false
       matrix:
         service: ${{ fromJson(inputs.services) }}
-    if: ${{ !github.event.draft && !github.event.release }}
+    if: ${{ !github.event.pull_request.draft && !github.event.release }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
