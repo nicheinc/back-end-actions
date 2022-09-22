@@ -311,15 +311,16 @@ jobs:
         if: success() || failure()
         shell: bash
         run: |
-          echo "::group::Docker ${{ github.event.repository.name }} logs"
-          echo "--- Kafka logs ---"
-          docker-compose logs kafka || echo "Kafka not running"
-          echo "--- Postgres logs ---"
-          docker-compose logs postgres || echo "Postgres not running"
           for service in ${{ steps.parse-services.outputs.services }}; do
-            echo "--- ${service} logs ---"
+            echo "::group::${service} logs"
             docker-compose logs ${service}
+            echo "::endgroup::"
           done
+          echo "::group::kafka logs"
+          docker-compose logs kafka || echo "kafka not running"
+          echo "::endgroup::"
+          echo "::group::postgres logs"
+          docker-compose logs postgres || echo "postgres not running"
           echo "::endgroup::"
 
   # Post release status to #deployment.
