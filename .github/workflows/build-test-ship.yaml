@@ -145,8 +145,15 @@ jobs:
       fail-fast: false
       matrix:
         service: ${{ fromJson(inputs.services) }}
-    if: ${{ false }}
+    if: ${{ !github.event.pull_request.draft }}
     steps:
+      - name: Print github.event context value for debugging
+        shell: bash
+        run: |
+          echo ${{ github.event }}
+          echo ${{ github.event.pull_request }}
+          echo ${{ github.event.pull_request.draft }}
+
       - name: Checkout repo
         uses: actions/checkout@v3
 
