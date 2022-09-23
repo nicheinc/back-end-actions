@@ -150,9 +150,10 @@ jobs:
       - name: Print github.event context value for debugging
         shell: bash
         run: |
-          echo ${{ github.event }}
-          echo ${{ github.event.pull_request }}
-          echo ${{ github.event.pull_request.draft }}
+          echo Event name: ${{ github.event_name }}
+          echo github.event: ${{ github.event }}
+          echo github.event.pull_request: ${{ github.event.pull_request }}
+          echo github.event.pull_request.draft: ${{ github.event.pull_request.draft }}
 
       - name: Checkout repo
         uses: actions/checkout@v3
