@@ -224,7 +224,7 @@ jobs:
           ENCODED_CREDENTIALS: ${{ secrets.DEV_AWS_CREDENTIALS }}
         shell: bash
         run: |
-          yq -n '.version = 3.7' > docker-compose.override.yaml
+          yq -n ".version = \"3.7\"" > docker-compose.override.yaml
           for service in ${{ steps.parse-services.outputs.services }}; do
             yq -i ".services.${service}.image = \"${service}:ci\"" docker-compose.override.yaml
           done
