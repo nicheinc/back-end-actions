@@ -216,15 +216,20 @@ jobs:
       - name: Use latest service images from ECR
         run: sed -i 's/${USER:?USER}/${{ steps.login-ecr.outputs.registry }}/' docker-compose.yml
 
+      - name: Set up yq for YAML processing
+        uses: mikefarah/yq@v4.27.3
+
       - name: Create docker-compose override and AWS credentials files
         env:
           ENCODED_CREDENTIALS: ${{ secrets.DEV_AWS_CREDENTIALS }}
         shell: bash
         run: |
-          echo -e "version: '3.7'\nservices:" > docker-compose.override.yaml
+          yq -n '.version = 3.7' > docker-compose.override.yaml
           for service in ${{ steps.parse-services.outputs.services }}; do
-            echo -e "  ${service}:\n    image: ${service}:ci" >> docker-compose.override.yaml
+            yq -i ".services.${service}.image = \"${service}:ci\"" docker-compose.override.yaml
           done
+          echo docker-compose.override.yaml:
+          cat docker-compose.override.yaml
           echo $ENCODED_CREDENTIALS | base64 -di > vault/aws_credentials
 
       # TODO: This is a hack to place empty secret files in the vault directory
@@ -235,9 +240,6 @@ jobs:
         run: |
           touch vault/website.secrets.env
           touch vault/landingpageadmin.secrets.env
-
-      - name: Set up yq for YAML processing
-        uses: mikefarah/yq@v4.27.3
 
       - name: Parse service dependencies
         id: parse-deps
