@@ -122,32 +122,7 @@ jobs:
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Cut a full release for the service image if it was a push and the version.txt changed
-      - name: Create Release for Service image
-        id: create-service-release
-        uses: ncipollo/release-action@3d2de22e3d0beab188d8129c27f103d8e91bf13a
-        if: |
-          github.event_name == 'push' && 
-          inputs.appchange == 'true'
-        with:
-          tag: "${{ inputs.appversion }}"
-          token: ${{ secrets.GITHUB_TOKEN }}
-
       # Notify in Slack
-      - name: Post image build to a Slack channel
-        if: |
-          github.event_name == 'push' &&
-          inputs.appchange == 'true'
-        uses: slackapi/slack-github-action@v1.17.0
-        with:
-          # Post Release Status result to #deployment
-          channel-id: 'C2C5JV162'
-          slack-message: |
-            GitHub has built `${{ github.event.repository.name }}:${{ inputs.appversion }}` 
-            for <${{ steps.create-service-release.outputs.html_url }}|release>. :shipitparrot:
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-
       - name: Post Helm Chart Prerelease to Slack
         if: |
           github.event_name == 'push' && 

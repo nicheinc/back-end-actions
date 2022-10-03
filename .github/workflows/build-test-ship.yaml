@@ -263,7 +263,7 @@ jobs:
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Cut a full release for the service image if it was a push and the version.txt changed
+      # Cut a full release for the service image if it was a push and the version.env changed
       - name: Create Release for Service image
         id: create-service-release
         uses: ncipollo/release-action@3d2de22e3d0beab188d8129c27f103d8e91bf13a
