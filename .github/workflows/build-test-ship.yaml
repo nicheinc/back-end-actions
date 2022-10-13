@@ -320,7 +320,8 @@ jobs:
           timeout 1m bash -c 'until docker-compose run postgres pg_isready -d postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres; do sleep 1s; done'
           declare -A dbs
           conn_regex='postgres://(\w*):(\w*)@\$\{POSTGRES_SERVER\}/(\w*)'
-          for dependency in ${{ steps.parse-deps.outputs.deps }}; do
+          # for dependency in ${{ steps.parse-deps.outputs.deps }}; do
+          for dependency in ${{ matrix.service }}; do
             # Parse DB from POSTGRES_CONNECTION. Parse roles and passwords from sql/roles.sql
             conn=$(yq ".services.${dependency}.environment.POSTGRES_CONNECTION" docker-compose.yml)
             if [[ ${conn} =~ ${conn_regex} ]]; then
@@ -335,12 +336,6 @@ jobs:
                   docker compose cp ${roles} postgres:roles.sql
                   docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
                     psql -h 0.0.0.0 -U ${POSTGRES_USER} -d ${db} -a -f roles.sql
-                fi
-                create="${context}/sql/create.sql"
-                if [[ -f ${create} ]]; then
-                  docker compose cp ${create} postgres:create.sql
-                  docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
-                    psql -h 0.0.0.0 -U ${POSTGRES_USER} -d ${db} -a -f create.sql
                 fi
                 extensions="${context}/sql/extensions.sql"
                 if [[ -f ${extensions} ]]; then
