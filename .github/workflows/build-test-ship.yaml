@@ -343,7 +343,7 @@ jobs:
                     psql -h 0.0.0.0 -U ${POSTGRES_USER} -d ${db} -a -f extensions.sql
                 fi
                 docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
-                  psql -h 0.0.0.0 -U ${POSTGRES_USER} -db ${db} -a \
+                  psql -h 0.0.0.0 -U ${POSTGRES_USER} -d ${db} -a \
                   -c "CREATE TABLE IF NOT EXISTS public.schema_migrations
                     (
                         version bigint NOT NULL,
