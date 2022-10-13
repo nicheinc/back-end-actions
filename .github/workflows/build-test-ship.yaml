@@ -271,6 +271,7 @@ jobs:
           yq -n ".version = \"3.7\"" > docker-compose.override.yaml
           for service in ${{ steps.parse-services.outputs.services }}; do
             yq -i ".services.${service}.image = \"${service}:ci\"" docker-compose.override.yaml
+            yq -i ".services.${service}.ELASTIC_CONNECTION = \"http://elasticsearch:9200\"" docker-compose.override.yaml
           done
           echo docker-compose.override.yaml:
           cat docker-compose.override.yaml
@@ -355,7 +356,7 @@ jobs:
         run: |
           docker-compose pull --include-deps ${{ steps.parse-services.outputs.services }}
           docker-compose up -d ${{ steps.parse-services.outputs.services }}
-          
+
       - name: Run API Proctor health test
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
