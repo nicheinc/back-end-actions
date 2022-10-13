@@ -348,7 +348,7 @@ jobs:
             fi
           done
 
-      - name: Launch services with dependencies via docker-compose
+      - name: Launch search service via docker-compose
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         shell: bash
