@@ -342,14 +342,6 @@ jobs:
                   docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
                     psql -h 0.0.0.0 -U ${POSTGRES_USER} -d ${db} -a -f extensions.sql
                 fi
-              #  docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgres \
-              #    psql -h 0.0.0.0 -U ${POSTGRES_USER} -d ${db} -a \
-              #    -c "CREATE TABLE IF NOT EXISTS public.schema_migrations
-              #      (
-              #          version bigint NOT NULL,
-              #          dirty boolean NOT NULL,
-              #          CONSTRAINT schema_migrations_pkey PRIMARY KEY (version)
-              #      )"
               else
                 echo ${db} database already initialized
               fi
@@ -361,9 +353,9 @@ jobs:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         shell: bash
         run: |
-          docker-compose pull search
-          docker-compose up --no-deps -d search
-
+          docker-compose pull --include-deps ${{ steps.parse-services.outputs.services }}
+          docker-compose up -d ${{ steps.parse-services.outputs.services }}
+          
       - name: Run API Proctor health test
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
