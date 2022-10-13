@@ -354,7 +354,7 @@ jobs:
         shell: bash
         run: |
           docker-compose pull search
-          docker-compose up -d search
+          docker-compose up --no-deps -d search
 
       - name: Run API Proctor tests
         env:
