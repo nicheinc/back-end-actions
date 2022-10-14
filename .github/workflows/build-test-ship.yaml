@@ -14,6 +14,11 @@ on:
         description: The timeout in minutes for running API Proctor tests.
         default: 30
         type: number
+      docker-compose-override:
+        description: >
+          A JSON array containing key-value pairs to be added to the
+          docker-compose-override.
+        type: string
     secrets:
       DEV_AWS_CREDENTIALS:
         required: true
@@ -236,6 +241,16 @@ jobs:
         shell: bash
         run: echo "::set-output name=services::`jq -r 'join(" ")' <<< '${{ inputs.services }}'`"
 
+      - name: Parse docker-compose-override into an array of key-value pairs
+        id: parse-docker-compose-override
+        shell: bash
+        run: echo "::set-output name=overrides::`jq -r '.' <<< '${{ inputs.docker-compose-override }}'`"
+
+      - name: Echo overrides
+        id: echo-overrides
+        shell:bash
+        run: echo ${{ steps.parse-services.outputs.overrides }}
+
       - name: Load docker images
         shell: bash
         run: |
@@ -271,8 +286,10 @@ jobs:
           yq -n ".version = \"3.7\"" > docker-compose.override.yaml
           for service in ${{ steps.parse-services.outputs.services }}; do
             yq -i ".services.${service}.image = \"${service}:ci\"" docker-compose.override.yaml
-          yq m -i -a docker-compose.override.yaml "${{ inputs.docker-compose-override }}" 
           done
+          #for key, value in ${{ fromJSON(inputs.docker-compose-override) }}; do
+          #  yq -i ".services.${key} = \"${value}\"" docker-compose.override.yaml
+          #done
           echo docker-compose.override.yaml:
           cat docker-compose.override.yaml
           echo $ENCODED_CREDENTIALS | base64 -di > vault/aws_credentials
