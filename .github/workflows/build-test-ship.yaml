@@ -14,11 +14,6 @@ on:
         description: The timeout in minutes for running API Proctor tests.
         default: 30
         type: number
-      docker-compose-override:
-        description: >
-          A JSON array containing key-value pairs to be added to the
-          docker-compose-override.
-        type: string
     secrets:
       DEV_AWS_CREDENTIALS:
         required: true
@@ -230,6 +225,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: nicheinc/development
+          ref: x/ci-overrides
           token: ${{ secrets.NPM_WRITE_TOKEN }}
           submodules: true
 
@@ -240,21 +236,6 @@ jobs:
         id: parse-services
         shell: bash
         run: echo "::set-output name=services::`jq -r 'join(" ")' <<< '${{ inputs.services }}'`"
-
-      - name: Echo overrides input
-        id: echo-overrides-input
-        shell: bash
-        run: echo ${{ inputs.docker-compose-override }}
-
-      - name: Parse docker-compose-override into an array of key-value pairs
-        id: parse-overrides
-        shell: bash
-        run: echo "::set-output name=overrides::`jq -r -s -c '.' <<< '${{ inputs.docker-compose-override }}'`"
-
-      - name: Echo overrides output
-        id: echo-overrides-output
-        shell: bash
-        run: echo ${{ steps.parse-overrides.outputs.overrides }}
 
       - name: Load docker images
         shell: bash
@@ -292,9 +273,7 @@ jobs:
           for service in ${{ steps.parse-services.outputs.services }}; do
             yq -i ".services.${service}.image = \"${service}:ci\"" docker-compose.override.yaml
           done
-          #for key, value in ${{ fromJSON(inputs.docker-compose-override) }}; do
-          #  yq -i ".services.${key} = \"${value}\"" docker-compose.override.yaml
-          #done
+          yq m -i docker-compose.override.yaml ${GITHUB_WORKSPACE}/docker-compose.ci-override.yaml
           echo docker-compose.override.yaml:
           cat docker-compose.override.yaml
           echo $ENCODED_CREDENTIALS | base64 -di > vault/aws_credentials
