@@ -241,12 +241,17 @@ jobs:
         shell: bash
         run: echo "::set-output name=services::`jq -r 'join(" ")' <<< '${{ inputs.services }}'`"
 
+      - name: Echo overrides input
+        id: echo-overrides
+        shell: bash
+        run: echo ${{ inputs.docker-compose-override }}
+
       - name: Parse docker-compose-override into an array of key-value pairs
         id: parse-docker-compose-override
         shell: bash
         run: echo "::set-output name=overrides::`jq -r '.' <<< '${{ inputs.docker-compose-override }}'`"
 
-      - name: Echo overrides
+      - name: Echo overrides output
         id: echo-overrides
         shell: bash
         run: echo ${{ steps.parse-services.outputs.overrides }}
