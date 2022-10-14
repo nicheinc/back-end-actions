@@ -248,7 +248,7 @@ jobs:
 
       - name: Echo overrides
         id: echo-overrides
-        shell:bash
+        shell: bash
         run: echo ${{ steps.parse-services.outputs.overrides }}
 
       - name: Load docker images
