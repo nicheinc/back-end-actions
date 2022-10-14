@@ -264,6 +264,9 @@ jobs:
       - name: Set up yq for YAML processing
         uses: mikefarah/yq@v4.27.3
 
+      - name: ls github workspace
+        run: ls ${{ github.workspace }}
+
       - name: Create docker-compose override and AWS credentials files
         env:
           ENCODED_CREDENTIALS: ${{ secrets.DEV_AWS_CREDENTIALS }}
