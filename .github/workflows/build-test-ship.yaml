@@ -249,7 +249,7 @@ jobs:
       - name: Parse docker-compose-override into an array of key-value pairs
         id: parse-overrides
         shell: bash
-        run: echo "::set-output name=overrides::{{ fromJSON(inputs.docker-compose-override) }}"
+        run: echo "::set-output name=overrides::`{{ fromJSON(inputs.docker-compose-override) }}`"
 
       - name: Echo overrides output
         id: echo-overrides-output
