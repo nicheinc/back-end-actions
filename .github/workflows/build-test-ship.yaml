@@ -242,7 +242,7 @@ jobs:
         run: echo "::set-output name=services::`jq -r 'join(" ")' <<< '${{ inputs.services }}'`"
 
       - name: Echo overrides input
-        id: echo-overrides
+        id: echo-overrides-input
         shell: bash
         run: echo ${{ inputs.docker-compose-override }}
 
@@ -252,9 +252,9 @@ jobs:
         run: echo "::set-output name=overrides::`jq -r '.' <<< '${{ inputs.docker-compose-override }}'`"
 
       - name: Echo overrides output
-        id: echo-overrides
+        id: echo-overrides-output
         shell: bash
-        run: echo ${{ steps.parse-services.outputs.overrides }}
+        run: echo ${{ steps.parse-docker-compose-override.outputs.overrides }}
 
       - name: Load docker images
         shell: bash
