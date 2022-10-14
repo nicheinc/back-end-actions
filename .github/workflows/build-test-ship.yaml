@@ -247,14 +247,14 @@ jobs:
         run: echo ${{ inputs.docker-compose-override }}
 
       - name: Parse docker-compose-override into an array of key-value pairs
-        id: parse-docker-compose-override
+        id: parse-overrides
         shell: bash
-        run: echo "::set-output name=overrides::`jq -r '.' <<< '${{ inputs.docker-compose-override }}'`"
+        run: echo "::set-output name=overrides::{{ fromJSON(inputs.docker-compose-override) }}"
 
       - name: Echo overrides output
         id: echo-overrides-output
         shell: bash
-        run: echo ${{ steps.parse-docker-compose-override.outputs.overrides }}
+        run: echo ${{ steps.parse-overrides.outputs.overrides }}
 
       - name: Load docker images
         shell: bash
