@@ -264,9 +264,6 @@ jobs:
       - name: Set up yq for YAML processing
         uses: mikefarah/yq@v4.27.3
 
-      - name: ls github workspace
-        run: ls ${{ github.workspace }}
-
       - name: Create docker-compose override and AWS credentials files
         env:
           ENCODED_CREDENTIALS: ${{ secrets.DEV_AWS_CREDENTIALS }}
@@ -394,6 +391,8 @@ jobs:
             docker-compose logs ${service}
             echo "::endgroup::"
           done
+          echo "::group::elasticsearch logs"
+          docker-compose logs elasticsearch || echo "elasticsearch not running"
           echo "::group::kafka logs"
           docker-compose logs kafka || echo "kafka not running"
           echo "::endgroup::"
