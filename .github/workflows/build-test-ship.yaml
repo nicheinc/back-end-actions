@@ -220,6 +220,7 @@ jobs:
       POSTGRES_PASSWORD: postgres
       POSTGRES_SERVER: postgres
       POSTGRES_PORT: 5432
+      ELASTICSEARCH_SERVER: localhost:9200
     steps:
       - name: Checkout development repo
         uses: actions/checkout@v3
