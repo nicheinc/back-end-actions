@@ -357,8 +357,9 @@ jobs:
         shell: bash
         run: |
           docker-compose pull --include-deps ${{ steps.parse-services.outputs.services }}
-          docker compose up -d --wait ${{ steps.parse-services.outputs.services }}
-
+          docker-compose up -d ${{ steps.parse-services.outputs.services }}
+          docker-compose up -d ${{ steps.parse-services.outputs.services }}
+          
       - name: Run API Proctor health test
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
