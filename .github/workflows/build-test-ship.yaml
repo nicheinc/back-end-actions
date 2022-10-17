@@ -319,7 +319,7 @@ jobs:
       - name: Start postgres and create service databases and roles
         shell: bash
         run: |
-          docker-compose up -d postgres
+          docker-compose up -d --wait postgres
           timeout 1m bash -c 'until docker-compose run postgres pg_isready -d postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres; do sleep 1s; done'
           declare -A dbs
           conn_regex='postgres://(\w*):(\w*)@\$\{POSTGRES_SERVER\}/(\w*)'
@@ -357,7 +357,7 @@ jobs:
         shell: bash
         run: |
           docker-compose pull --include-deps ${{ steps.parse-services.outputs.services }}
-          docker-compose up -d ${{ steps.parse-services.outputs.services }}
+          docker-compose up -d --wait ${{ steps.parse-services.outputs.services }}
 
       - name: Run API Proctor health test
         env:
