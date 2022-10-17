@@ -1,6 +1,7 @@
 name: Push Helm Charts
 permissions:
   contents: write
+  pull-requests: write
 on:
   workflow_call:
     inputs:
@@ -24,6 +25,12 @@ on:
           The current version of the Helm chart(s)
         required: true
         type: string
+      protect-dev:
+        description: >
+          Whether dev is a protected branch
+        required: false
+        default: false
+        type: boolean
     secrets:
       ECR_ACCESS_KEY_ID:
         required: true
@@ -49,7 +56,6 @@ jobs:
       # If the chart version changed we need to reflect it in the chart(s).
       # Also reflects app changes if both change in the same PR.
       - name: Update Versions in Helm Chart(s)
-        id: update-versions
         if: |
           github.event_name == 'push' &&
           inputs.chartchange == 'true'
@@ -57,6 +63,16 @@ jobs:
           . version.env
           sed -i 's/^appVersion: .*/appVersion: \"'${APPVERSION}'\"/' charts/*/Chart.yaml
           sed -i 's/^version: .*/version: '${CHARTVERSION}'/' charts/*/Chart.yaml
+
+      # If the chart version changed we need to reflect it in the chart(s).
+      # Also reflects app changes if both change in the same PR.
+      - name: Push Helm Chart Updates
+        if: |
+          github.event_name == 'push' &&
+          inputs.chartchange == 'true' &&
+          !inputs.protect-dev
+        run: |
+          . version.env
           if ! git diff --quiet; then
             git config --global user.name github-actions
             git config --global user.email ""
@@ -64,6 +80,22 @@ jobs:
             git commit -m "Updating Helm charts with appversion ${APPVERSION}, chartversion ${CHARTVERSION}"
             git push
           fi
+
+      # Updates Helm chart versions via PR
+      - name: PR Helm Chart Updates
+        id: create-pull-request
+        if: |
+          github.event_name == 'push' &&
+          inputs.chartchange == 'true' &&
+          inputs.protect-dev
+        uses: peter-evans/create-pull-request@v4
+        with:
+          base: dev
+          branch: chart-version-update
+          title: Updating Helm Chart Versions
+          body: Updating Helm charts with appversion ${{ inputs.appversion }}, chartversion ${{ inputs.chartversion }}
+          delete-branch: true
+          commit-message: Helm charts appversion ${{ inputs.appversion }}, chartversion ${{ inputs.chartversion }}
 
       # If this was a push to dev and we need to ship charts, ship prereleases first
       - name: Mark as Prerelease
