@@ -227,6 +227,7 @@ jobs:
           repository: nicheinc/development
           token: ${{ secrets.NPM_WRITE_TOKEN }}
           submodules: true
+          ref: x/pg-healthcheck
 
       - name: Download docker image artifacts
         uses: actions/download-artifact@v3
@@ -316,8 +317,7 @@ jobs:
       - name: Start postgres and create service databases and roles
         shell: bash
         run: |
-          docker-compose up -d postgres
-          timeout 1m bash -c 'until docker-compose run postgres pg_isready -d postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres; do sleep 1s; done'
+          docker compose up --wait postgres
           declare -A dbs
           conn_regex='postgres://(\w*):(\w*)@\$\{POSTGRES_SERVER\}/(\w*)'
           for dependency in ${{ steps.parse-deps.outputs.deps }}; do
