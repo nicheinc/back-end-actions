@@ -362,8 +362,10 @@ jobs:
       
       - name: Create search index
         shell: bash
-        run: >
-          make search-elastic-indexer ARGS='-elastic.connection=http://localhost:9200
+        run: |
+          docker-compose build search-elastic-indexer
+          docker-compose run search-elastic-indexer elastic.connection=http://localhost:9200
+
 
       - name: Launch search service via docker-compose
         env:
