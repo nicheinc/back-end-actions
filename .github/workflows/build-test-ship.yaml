@@ -360,13 +360,6 @@ jobs:
           docker compose up -d --wait elasticsearch
           sleep 30s
       
-      - name: Create search index
-        shell: bash
-        run: |
-          docker-compose build search-elastic-indexer
-          docker-compose run search-elastic-indexer elastic.connection=http://localhost:9200
-
-
       - name: Launch search service via docker-compose
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -374,6 +367,9 @@ jobs:
         run: |
           docker-compose pull --include-deps ${{ steps.parse-services.outputs.services }}
           docker-compose up -d ${{ steps.parse-services.outputs.services }}
+          sleep 1m
+          docker-compose up -d ${{ steps.parse-services.outputs.services }}
+
 
       - name: Run API Proctor health test
         env:
