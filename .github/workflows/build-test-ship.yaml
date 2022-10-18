@@ -358,6 +358,7 @@ jobs:
         run: |
           docker-compose pull --include-deps elasticsearch
           docker compose up -d --wait elasticsearch
+          sleep 1m
       
       - name: Create empty index
         shell: bash
