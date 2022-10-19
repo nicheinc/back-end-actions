@@ -57,8 +57,10 @@ jobs:
       # Also reflects app changes if both change in the same PR.
       - name: Update Versions in Helm Chart(s)
         if: |
-          github.event_name == 'push' &&
-          inputs.chartchange == 'true'
+          (github.event_name == 'push' &&
+           inputs.chartchange == 'true') ||
+          (github.event_name == 'release' &&
+           startsWith(github.ref_name, 'helm-chart'))
         run: |
           . version.env
           sed -i 's/^appVersion: .*/appVersion: \"'${APPVERSION}'\"/' charts/*/Chart.yaml
