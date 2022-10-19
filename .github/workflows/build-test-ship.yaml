@@ -360,14 +360,17 @@ jobs:
           docker compose up -d --wait elasticsearch
           sleep 30s
       
+      - name: Health check elasticsearch
+        shell: bash
+        run: |
+          curl http://localhost:9200/
+
       - name: Launch search service via docker-compose
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         shell: bash
         run: |
           docker-compose pull --include-deps ${{ steps.parse-services.outputs.services }}
-          docker-compose up -d ${{ steps.parse-services.outputs.services }}
-          sleep 1m
           docker-compose up -d ${{ steps.parse-services.outputs.services }}
 
 
