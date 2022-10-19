@@ -359,12 +359,6 @@ jobs:
           docker-compose pull --include-deps elasticsearch
           docker compose up -d --wait elasticsearch
           sleep 30s
-      
-      - name: Health check elasticsearch
-        shell: bash
-        run: |
-          curl http://localhost:9200/
-          curl -XGET http://localhost:9200/_nodes/http?pretty=1
 
       - name: Launch search service via docker-compose
         env:
@@ -374,6 +368,12 @@ jobs:
           docker-compose pull --include-deps ${{ steps.parse-services.outputs.services }}
           docker-compose up -d ${{ steps.parse-services.outputs.services }}
 
+      - name: Curl search service
+        shell: bash
+        run: |
+          curl localhost:4011/health
+          sleep 1m
+          curl localhost:4011/health
 
       - name: Run API Proctor health test
         env:
