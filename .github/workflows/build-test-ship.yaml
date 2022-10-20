@@ -371,9 +371,8 @@ jobs:
       - name: Curl search service
         shell: bash
         run: |
-          curl localhost:4011/health
           sleep 1m
-          curl localhost:4011/health
+          curl -i localhost:4011/health
 
       - name: Run API Proctor health test
         env:
