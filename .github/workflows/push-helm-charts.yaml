@@ -27,7 +27,15 @@ on:
         type: string
       protect-dev:
         description: >
-          Whether dev is a protected branch
+          Use a PR to update dev with new Helm chart versions
+          instead of pushing directly
+        required: false
+        default: false
+        type: boolean
+      bypass-dev-protections:
+        description: >
+          Use custom user to override branch protections when
+          pushing directly to dev
         required: false
         default: false
         type: boolean
@@ -40,6 +48,8 @@ on:
         required: true
       AWS_ACCOUNT_ID:
         required: true
+      PUSH_CHARTS_TOKEN:
+        required: false
 
 jobs:  
   # Builds and ships Helm charts if necessary
@@ -49,9 +59,18 @@ jobs:
       github.event_name == 'push' || 
       github.event_name == 'release'
     steps:
+      # Checkout as github-actions for normal workflow
       - uses: actions/checkout@v2
+        if: |
+          !inputs.bypass-dev-protections
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+      # Checkout as given token to bypass branch protections
+      - uses: actions/checkout@v2
+        if: |
+          inputs.bypass-dev-protections
+        with:
+          token: ${{ secrets.PUSH_CHARTS_TOKEN }}
 
       # If the chart version changed we need to reflect it in the chart(s).
       # Also reflects app changes if both change in the same PR.
@@ -79,7 +98,7 @@ jobs:
             git config --global user.name github-actions
             git config --global user.email ""
             git add -A
-            git commit -m "Updating Helm charts with appversion ${APPVERSION}, chartversion ${CHARTVERSION}"
+            git commit -m "[skip ci] Updating Helm charts with appversion ${APPVERSION}, chartversion ${CHARTVERSION}"
             git push
           fi
 
