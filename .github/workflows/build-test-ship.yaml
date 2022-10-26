@@ -351,6 +351,14 @@ jobs:
             fi
           done
 
+      - name: Launch search service via docker-compose (first time)
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        shell: bash
+        run: |
+          docker-compose pull --include-deps ${{ steps.parse-services.outputs.services }}
+          docker-compose up -d ${{ steps.parse-services.outputs.services }}
+
       - name: Launch elasticsearch via docker-compose
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -367,7 +375,7 @@ jobs:
           docker-compose run search-elastic-indexer elastic.connection=http://localhost:9200
           sleep 1m
           
-      - name: Launch search service via docker-compose
+      - name: Launch search service via docker-compose (second time)
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         shell: bash
