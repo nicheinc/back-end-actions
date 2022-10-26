@@ -371,6 +371,7 @@ jobs:
 
       - name: Curl search service
         shell: bash
+        continue-on-error: true
         run: |
           curl -i localhost:4011/health
 
