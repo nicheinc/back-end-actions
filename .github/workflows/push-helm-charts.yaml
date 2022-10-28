@@ -39,6 +39,12 @@ on:
         required: false
         default: false
         type: boolean
+      no-slack:
+        description:
+          Disables slack notifications
+        required: false
+        default: false
+        type: boolean
     secrets:
       ECR_ACCESS_KEY_ID:
         required: true
@@ -179,7 +185,8 @@ jobs:
       - name: Post Helm Chart Prerelease to Slack
         if: |
           github.event_name == 'push' && 
-          inputs.chartchange == 'true'
+          inputs.chartchange == 'true' &&
+          !inputs.no-slack
         uses: slackapi/slack-github-action@v1.17.0
         with:
           channel-id: 'C2C5JV162'
@@ -192,7 +199,8 @@ jobs:
       - name: Post Helm Chart Release to Slack
         if: |
           github.event_name == 'release' &&
-          startsWith(github.ref_name, 'helm-chart')  
+          startsWith(github.ref_name, 'helm-chart') &&
+          !inputs.no-slack
         uses: slackapi/slack-github-action@v1.17.0
         with:
           channel-id: 'C2C5JV162'
