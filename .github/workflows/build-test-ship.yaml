@@ -105,10 +105,10 @@ jobs:
               chartchange="false"
             fi
           done
-          echo "::set-output name=appversion::${APPVERSION}"
-          echo "::set-output name=chartversion::${CHARTVERSION}"
-          echo "::set-output name=appchange::${appchange}"
-          echo "::set-output name=chartchange::${chartchange}"
+          echo "appversion=${APPVERSION}" >> $GITHUB_OUTPUT
+          echo "chartversion=${CHARTVERSION}" >> $GITHUB_OUTPUT
+          echo "appchange=${appchange}" >> $GITHUB_OUTPUT
+          echo "chartchange=${chartchange}" >> $GITHUB_OUTPUT
 
       # On merge to dev make sure if the app changed
       # but the chart version didn't we error out
@@ -234,7 +234,7 @@ jobs:
       - name: Parse services into a space-separated string
         id: parse-services
         shell: bash
-        run: echo "::set-output name=services::`jq -r 'join(" ")' <<< '${{ inputs.services }}'`"
+        run: echo "services=`jq -r 'join(" ")' <<< '${{ inputs.services }}'`" >> $GITHUB_OUTPUT
 
       - name: Load docker images
         shell: bash
@@ -311,7 +311,7 @@ jobs:
             done
           done
           echo Dependencies: ${!deps[@]}
-          echo "::set-output name=deps::${!deps[@]}"
+          echo "deps=${!deps[@]}" >> $GITHUB_OUTPUT
 
       - name: Start postgres and create service databases and roles
         shell: bash
