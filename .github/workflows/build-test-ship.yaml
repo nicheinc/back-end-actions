@@ -193,6 +193,6 @@ jobs:
       appversion: ${{ needs.build-and-ship-image.outputs.appversion }}
       chartchange: ${{ needs.build-and-ship-image.outputs.chartchange }}
       chartversion: ${{ needs.build-and-ship-image.outputs.chartversion }}
-      bypass-dev-protections: inputs.bypass-dev-protections
+      bypass-dev-protections: ${{ inputs.bypass-dev-protections }}
     secrets: inherit
     needs: build-and-ship-image
