@@ -11,6 +11,13 @@ on:
           eponymous microservice itself, any associated Kafka consumers, etc.
         required: true
         type: string
+      bypass-dev-protections:
+        description: >
+          Use custom user to override branch protections when
+          pushing directly to dev
+        required: false
+        default: false
+        type: boolean
     secrets:
       DEV_AWS_CREDENTIALS:
         required: true
@@ -186,6 +193,6 @@ jobs:
       appversion: ${{ needs.build-and-ship-image.outputs.appversion }}
       chartchange: ${{ needs.build-and-ship-image.outputs.chartchange }}
       chartversion: ${{ needs.build-and-ship-image.outputs.chartversion }}
-      bypass-dev-protections: true
+      bypass-dev-protections: inputs.bypass-dev-protections
     secrets: inherit
     needs: build-and-ship-image
