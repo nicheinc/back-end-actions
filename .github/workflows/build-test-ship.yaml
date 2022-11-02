@@ -384,7 +384,7 @@ jobs:
             -e READ_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
             -e WRITE_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
             -e NODE_ENV=ci \
-            $ECR_REGISTRY/api-proctor:latest \
+            $ECR_REGISTRY/api-proctor:pr-task-UpdateSearchDataSeeding \
             tests/${{ github.event.repository.name }}/health --testPathIgnorePatterns=/src/ --passWithNoTests
 
       - name: Run all API Proctor tests
@@ -396,7 +396,7 @@ jobs:
             -e READ_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
             -e WRITE_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
             -e NODE_ENV=ci \
-            $ECR_REGISTRY/api-proctor:latest \
+            $ECR_REGISTRY/api-proctor:pr-task-UpdateSearchDataSeeding \
             tests/${{ github.event.repository.name }}/ --testPathIgnorePatterns=/src/ --passWithNoTests
 
       - name: Docker Compose logs
