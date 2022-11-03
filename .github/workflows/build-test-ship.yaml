@@ -1,6 +1,7 @@
 name: Build, Test, and Ship
 permissions:
   contents: write
+  pull-requests: write
 on:
   workflow_call:
     inputs:
@@ -10,6 +11,13 @@ on:
           eponymous microservice itself, any associated Kafka consumers, etc.
         required: true
         type: string
+      bypass-dev-protections:
+        description: >
+          Use custom user to override branch protections when
+          pushing directly to dev
+        required: false
+        default: false
+        type: boolean
     secrets:
       DEV_AWS_CREDENTIALS:
         required: true
@@ -107,12 +115,12 @@ jobs:
           echo "::set-output name=appchange::${appchange}"
           echo "::set-output name=chartchange::${chartchange}"
 
-      # On merge to dev make sure if the app changed 
+      # On merge to dev make sure if the app changed
       # but the chart version didn't we error out
       - name: Ensure Version Changed
         if: |
-          github.event_name == 'push' && 
-          steps.check-version-change.outputs.appchange == 'true' && 
+          github.event_name == 'push' &&
+          steps.check-version-change.outputs.appchange == 'true' &&
           steps.check-version-change.outputs.chartchange != 'true'
         run: |
           exit 1
@@ -128,7 +136,7 @@ jobs:
         uses: docker/build-push-action@v2
         if: |
           github.event_name == 'pull_request' ||
-          (github.event_name == 'push' && 
+          (github.event_name == 'push' &&
            steps.check-version-change.outputs.appchange == 'false')
         with:
           context: .
@@ -141,7 +149,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         if: |
-          github.event_name == 'push' && 
+          github.event_name == 'push' &&
           steps.check-version-change.outputs.appchange == 'true'
         with:
           aws-access-key-id: ${{ secrets.ECR_ACCESS_KEY_ID }}
@@ -151,14 +159,14 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         if: |
-          github.event_name == 'push' && 
+          github.event_name == 'push' &&
           steps.check-version-change.outputs.appchange == 'true'
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Build and ship final images
         uses: docker/build-push-action@v2
         if: |
-          github.event_name == 'push' && 
+          github.event_name == 'push' &&
           steps.check-version-change.outputs.appchange == 'true'
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -177,140 +185,14 @@ jobs:
 
   # Builds and ships Helm charts if necessary
   push-charts:
+    name: Push Helm Charts
+    if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
+    uses: nicheinc/actions/.github/workflows/push-helm-charts.yaml@405c3f7cd949c0c557c85199d3206968916e5f6f
+    with:
+      appchange: ${{ needs.build-and-ship-image.outputs.appchange }}
+      appversion: ${{ needs.build-and-ship-image.outputs.appversion }}
+      chartchange: ${{ needs.build-and-ship-image.outputs.chartchange }}
+      chartversion: ${{ needs.build-and-ship-image.outputs.chartversion }}
+      bypass-dev-protections: ${{ inputs.bypass-dev-protections }}
+    secrets: inherit
     needs: build-and-ship-image
-    runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'push' || 
-      github.event_name == 'release'
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      # If the chart version changed we need to reflect it in the chart(s).
-      # Also reflects app changes if both change in the same PR.
-      - name: Update Versions in Helm Chart(s)
-        id: update-versions
-        if: |
-          github.event_name == 'push' &&
-          needs.build-and-ship-image.outputs.chartchange == 'true'
-        run: |
-          . version.env
-          sed -i 's/^appVersion: .*/appVersion: \"'${APPVERSION}'\"/' charts/*/Chart.yaml
-          sed -i 's/^version: .*/version: '${CHARTVERSION}'/' charts/*/Chart.yaml
-          if ! git diff --quiet; then
-            git config --global user.name github-actions
-            git config --global user.email ""
-            git add -A
-            git commit -m "Updating Helm charts with appversion ${APPVERSION}, chartversion ${CHARTVERSION}"
-            git push
-          fi
-
-      # If this was a push to dev and we need to ship charts, ship prereleases first
-      - name: Mark as Prerelease
-        id: mark-prerelease
-        if: |
-          github.event_name == 'push' && 
-          needs.build-and-ship-image.outputs.chartchange == 'true'
-        run: |
-          sed -i '/^version/ s/$/-beta/' charts/*/Chart.yaml
-
-      # AWS Setup
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        if: |
-          (github.event_name == 'push' &&
-           needs.build-and-ship-image.outputs.chartchange == 'true') ||
-          (github.event_name == 'release' &&
-           startsWith(github.ref_name, 'helm-chart'))
-        with:
-          aws-access-key-id: ${{ secrets.ECR_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.ECR_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
-      # Push charts to ECR for any qualifying push to dev
-      # or any non-prerelease that starts with "helm-chart"
-      - name: Helm Push
-        if: |
-          (github.event_name == 'push' &&
-           needs.build-and-ship-image.outputs.chartchange == 'true') ||
-          (github.event_name == 'release' &&
-           startsWith(github.ref_name, 'helm-chart'))
-        env:
-          REGISTRY_URL: oci://${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
-        run: |
-          REGISTRY=$(echo "${REGISTRY_URL}" | awk -F[/:] '{print $4}') # Get registry host from url
-          aws ecr get-login-password | helm registry login -u AWS --password-stdin ${REGISTRY}
-          for chart in charts/*; do
-            echo "Packaging chart '$chart'"
-            PKG_RESPONSE=$(helm package "$chart")
-            echo "$PKG_RESPONSE"
-            CHART_TAR_GZ=$(basename "$PKG_RESPONSE")
-            echo "Pushing chart $CHART_TAR_GZ to '$REGISTRY_URL'"
-            helm push "$CHART_TAR_GZ" "$REGISTRY_URL"
-            echo "Successfully pushed chart $CHART_TAR_GZ to '$REGISTRY_URL'"
-          done
-
-      # Cut a prerelease for the helm chart if it was a push
-      - name: Create Prerelease for Helm Charts
-        id: create-helm-prerelease
-        uses: ncipollo/release-action@3d2de22e3d0beab188d8129c27f103d8e91bf13a
-        if: |
-          github.event_name == 'push' &&
-          needs.build-and-ship-image.outputs.chartchange == 'true'
-        with:
-          tag: "helm-chart-${{ needs.build-and-ship-image.outputs.chartversion }}"
-          prerelease: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      # Cut a full release for the service image if it was a push and the version.env changed
-      - name: Create Release for Service image
-        id: create-service-release
-        uses: ncipollo/release-action@3d2de22e3d0beab188d8129c27f103d8e91bf13a
-        if: |
-          github.event_name == 'push' && 
-          needs.build-and-ship-image.outputs.appchange == 'true'
-        with:
-          tag: "${{ needs.build-and-ship-image.outputs.appversion }}"
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      # Notify in Slack
-      - name: Post image build to a Slack channel
-        if: |
-          github.event_name == 'push' &&
-          needs.build-and-ship-image.outputs.appchange == 'true'
-        uses: slackapi/slack-github-action@v1.17.0
-        with:
-          # Post Release Status result to #deployment
-          channel-id: 'C2C5JV162'
-          slack-message: |
-            GitHub has built `${{ github.event.repository.name }}:${{ needs.build-and-ship-image.outputs.appversion }}` 
-            for <${{ steps.create-service-release.outputs.html_url }}|release>. :shipitparrot:
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-
-      - name: Post Helm Chart Prerelease to Slack
-        if: |
-          github.event_name == 'push' && 
-          needs.build-and-ship-image.outputs.chartchange == 'true'
-        uses: slackapi/slack-github-action@v1.17.0
-        with:
-          channel-id: 'C2C5JV162'
-          slack-message: |
-            GitHub has built `${{ github.event.repository.name }}:helm-chart-${{ needs.build-and-ship-image.outputs.chartversion }}` 
-            for <${{ steps.create-helm-prerelease.outputs.html_url }}|release>. :shipitparrot:
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-
-      - name: Post Helm Chart Release to Slack
-        if: |
-          github.event_name == 'release' &&
-          startsWith(github.ref_name, 'helm-chart')  
-        uses: slackapi/slack-github-action@v1.17.0
-        with:
-          channel-id: 'C2C5JV162'
-          slack-message: |
-            GitHub has promoted `${{ github.event.repository.name }}:${{ github.ref_name }}` 
-            to production. :shipitparrot:
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
