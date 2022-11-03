@@ -29,48 +29,48 @@ on:
         required: true
 
 jobs:
-  # # Retrieve the minimum Go version from go.mod and output a matrix of all Go
-  # # versions released since. Skip on release.
-  # go-versions:
-  #   name: Get supported Go versions
-  #   runs-on: ubuntu-latest
-  #   if: ${{ github.event_name != 'release' }}
-  #   outputs:
-  #     matrix: ${{ steps.versions.outputs.matrix }}
-  #   steps:
-  #     - name: Checkout repo
-  #       uses: actions/checkout@v3
+  # Retrieve the minimum Go version from go.mod and output a matrix of all Go
+  # versions released since. Skip on release.
+  go-versions:
+    name: Get supported Go versions
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'release' }}
+    outputs:
+      matrix: ${{ steps.versions.outputs.matrix }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-  #     - name: Set Go versions
-  #       uses: arnested/go-version-action@v1
-  #       id: versions
+      - name: Set Go versions
+        uses: arnested/go-version-action@v1
+        id: versions
 
-  # # Run unit tests and go vet with each supported Go version. Skip on release.
-  # unit-test-and-vet:
-  #   name: Unit test and vet with Go ${{ matrix.go }}
-  #   runs-on: ubuntu-latest
-  #   if: ${{ github.event_name != 'release' }}
-  #   needs: go-versions
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       go: ${{ fromJSON(needs.go-versions.outputs.matrix) }}
-  #   steps:
-  #     - name: Checkout repo
-  #       uses: actions/checkout@v3
+  # Run unit tests and go vet with each supported Go version. Skip on release.
+  unit-test-and-vet:
+    name: Unit test and vet with Go ${{ matrix.go }}
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'release' }}
+    needs: go-versions
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ${{ fromJSON(needs.go-versions.outputs.matrix) }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-  #     - name: Install Go
-  #       uses: actions/setup-go@v3
-  #       with:
-  #         go-version: ${{ matrix.go }}
+      - name: Install Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go }}
 
-  #     - name: Test
-  #       run: |
-  #         go test -v -cover -race ./...
+      - name: Test
+        run: |
+          go test -v -cover -race ./...
 
-  #     - name: Vet
-  #       run: |
-  #         go vet ./...
+      - name: Vet
+        run: |
+          go vet ./...
 
   # Build image for api-proctor and, on release, ship final images to ECR.
   build-and-ship-images:
@@ -358,7 +358,6 @@ jobs:
         run: |
           docker-compose pull --include-deps elasticsearch
           docker compose up -d --wait elasticsearch
-          sleep 1m
 
       - name: Launch search service via docker-compose
         env:
@@ -367,27 +366,8 @@ jobs:
         run: |
           docker-compose pull --include-deps ${{ steps.parse-services.outputs.services }}
           docker-compose up -d ${{ steps.parse-services.outputs.services }}
-          sleep 1m
 
-      - name: Curl search service
-        shell: bash
-        continue-on-error: true
-        run: |
-          curl -i localhost:4011/health
-
-      - name: Run API Proctor health test
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        shell: bash
-        run: |
-          docker run --rm --name api-proctor --network host \
-            -e READ_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
-            -e WRITE_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
-            -e NODE_ENV=ci \
-            $ECR_REGISTRY/api-proctor:pr-task-UpdateSearchDataSeeding \
-            tests/${{ github.event.repository.name }}/health --testPathIgnorePatterns=/src/ --passWithNoTests
-
-      - name: Run all API Proctor tests
+      - name: Run API Proctor tests
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         shell: bash
