@@ -231,15 +231,27 @@ jobs:
       - name: Download docker image artifacts
         uses: actions/download-artifact@v3
 
-      - name: Parse services into a space-separated string
-        id: parse-services
+      - name: Set up yq for YAML processing
+        uses: mikefarah/yq@v4.27.3
+
+      - name: Get relevant services as a space-separated string
+        id: get-services
         shell: bash
-        run: echo "services=`jq -r 'join(" ")' <<< '${{ inputs.services }}'`" >> $GITHUB_OUTPUT
+        run: |
+          tools=`yq -o=json '.services
+            | with_entries(select(.value.profiles.[] | contains("tools")))
+            | to_entries
+            | map(.key)' docker-compose.yml`
+          all_services=`yq -o=json '.services | keys' docker-compose.yml`
+          non_tools=`jq --null-input "${all_services} - ${tools}"`
+          input_services='${{ inputs.services }}'
+          services=`jq --null-input "${input_services} - (${input_services} - ${non_tools})"`
+          echo "services=`jq -r 'join(" ")' <<< ${services}`" >> $GITHUB_OUTPUT
 
       - name: Load docker images
         shell: bash
         run: |
-          for service in ${{ steps.parse-services.outputs.services }}; do
+          for service in ${{ steps.get-services.outputs.services }}; do
             docker load --input ${service}/${service}.tar
           done
 
@@ -260,16 +272,13 @@ jobs:
       - name: Use latest service images from ECR
         run: sed -i 's/${USER:?USER}/${{ steps.login-ecr.outputs.registry }}/' docker-compose.yml
 
-      - name: Set up yq for YAML processing
-        uses: mikefarah/yq@v4.27.3
-
       - name: Create docker-compose override and AWS credentials files
         env:
           ENCODED_CREDENTIALS: ${{ secrets.DEV_AWS_CREDENTIALS }}
         shell: bash
         run: |
           yq -n ".version = \"3.7\"" > docker-compose.override.yaml
-          for service in ${{ steps.parse-services.outputs.services }}; do
+          for service in ${{ steps.get-services.outputs.services }}; do
             yq -i ".services.${service}.image = \"${service}:ci\"" docker-compose.override.yaml
           done
           echo docker-compose.override.yaml:
@@ -292,7 +301,7 @@ jobs:
           declare -A work_set # Nodes to be visited
           declare -A deps # Nodes already in the dependency set
           # Initialize the work set to the services from this repo.
-          for service in ${{ steps.parse-services.outputs.services }}; do
+          for service in ${{ steps.get-services.outputs.services }}; do
             work_set[${service}]=1
           done
           # While the work set is nonempty, pop and visit an arbitrary node.
@@ -353,8 +362,8 @@ jobs:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         shell: bash
         run: |
-          docker-compose pull --include-deps ${{ steps.parse-services.outputs.services }}
-          docker-compose up -d ${{ steps.parse-services.outputs.services }}
+          docker-compose pull --include-deps ${{ steps.get-services.outputs.services }}
+          docker-compose up -d ${{ steps.get-services.outputs.services }}
 
       - name: Run API Proctor tests
         env:
@@ -372,7 +381,7 @@ jobs:
         if: success() || failure()
         shell: bash
         run: |
-          for service in ${{ steps.parse-services.outputs.services }}; do
+          for service in ${{ steps.get-services.outputs.services }}; do
             echo "::group::${service} logs"
             docker-compose logs ${service}
             echo "::endgroup::"
