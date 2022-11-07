@@ -226,12 +226,12 @@ jobs:
       POSTGRES_PASSWORD: postgres
       POSTGRES_SERVER: postgres
       POSTGRES_PORT: 5432
-      ELASTICSEARCH_SERVER: elasticsearch:9200
     steps:
       - name: Checkout development repo
         uses: actions/checkout@v3
         with:
           repository: nicheinc/development
+          ref: x/ci-overrides
           token: ${{ secrets.NPM_WRITE_TOKEN }}
           submodules: true
 
@@ -279,6 +279,7 @@ jobs:
           for service in ${{ steps.parse-services.outputs.services }}; do
             yq -i ".services.${service}.image = \"${service}:ci\"" docker-compose.override.yaml
           done
+          yq eval-all --inplace 'select(fileIndex == 0) * select(fileIndex == 1)' docker-compose.override.yaml ${{ github.workspace }}/docker-compose.ci-override.yml
           echo docker-compose.override.yaml:
           cat docker-compose.override.yaml
           echo $ENCODED_CREDENTIALS | base64 -di > vault/aws_credentials
