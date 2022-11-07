@@ -232,7 +232,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: nicheinc/development
-          ref: x/ci-overrides
           token: ${{ secrets.NPM_WRITE_TOKEN }}
           submodules: true
 
@@ -280,7 +279,6 @@ jobs:
           for service in ${{ steps.parse-services.outputs.services }}; do
             yq -i ".services.${service}.image = \"${service}:ci\"" docker-compose.override.yaml
           done
-          yq eval-all --inplace 'select(fileIndex == 0) * select(fileIndex == 1)' docker-compose.override.yaml ${{ github.workspace }}/docker-compose.ci-override.yml
           echo docker-compose.override.yaml:
           cat docker-compose.override.yaml
           echo $ENCODED_CREDENTIALS | base64 -di > vault/aws_credentials
@@ -325,7 +323,7 @@ jobs:
       - name: Start postgres and create service databases and roles
         shell: bash
         run: |
-          docker compose up -d --wait postgres
+          docker compose up -d postgres
           timeout 1m bash -c 'until docker-compose run postgres pg_isready -d postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres; do sleep 1s; done'
           declare -A dbs
           conn_regex='postgres://(\w*):(\w*)@\$\{POSTGRES_SERVER\}/(\w*)'
@@ -358,7 +356,7 @@ jobs:
           done
 
       - name: Launch elasticsearch via docker-compose
-        if: yq 'select(.services.${{ matrix.service }}.environment | has("ELASTIC_CONNECTION"))' docker-compose.override.yaml
+        if: ${{ inputs.uses_elasticsearch }}
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         shell: bash
@@ -395,8 +393,6 @@ jobs:
             docker-compose logs ${service}
             echo "::endgroup::"
           done
-          echo "::group::elasticsearch logs"
-          docker-compose logs elasticsearch || echo "elasticsearch not running"
           echo "::group::kafka logs"
           docker-compose logs kafka || echo "kafka not running"
           echo "::endgroup::"
