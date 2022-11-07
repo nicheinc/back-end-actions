@@ -352,6 +352,7 @@ jobs:
           done
 
       - name: Launch elasticsearch via docker-compose
+        if: yq '.[] | has("services.${{ matrix.service }}.environment.ELASTIC_CONNECTION")' docker-compose.override.yaml
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         shell: bash
