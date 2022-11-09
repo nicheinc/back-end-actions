@@ -105,10 +105,10 @@ jobs:
               chartchange="false"
             fi
           done
-          echo "::set-output name=appversion::${APPVERSION}"
-          echo "::set-output name=chartversion::${CHARTVERSION}"
-          echo "::set-output name=appchange::${appchange}"
-          echo "::set-output name=chartchange::${chartchange}"
+          echo "appversion=${APPVERSION}" >> $GITHUB_OUTPUT
+          echo "chartversion=${CHARTVERSION}" >> $GITHUB_OUTPUT
+          echo "appchange=${appchange}" >> $GITHUB_OUTPUT
+          echo "chartchange=${chartchange}" >> $GITHUB_OUTPUT
 
       # On merge to dev make sure if the app changed
       # but the chart version didn't we error out
@@ -210,7 +210,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
 
   run-api-proctor-tests:
-    name: Run api-proctor tests
+    name: Run API Proctor tests
     runs-on: ubuntu-latest
     needs: build-and-ship-images
     timeout-minutes: ${{ inputs.api-proctor-timeout-minutes }}
@@ -225,22 +225,33 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: nicheinc/development
-          ref: x/ci-overrides
           token: ${{ secrets.NPM_WRITE_TOKEN }}
           submodules: true
 
       - name: Download docker image artifacts
         uses: actions/download-artifact@v3
 
-      - name: Parse services into a space-separated string
-        id: parse-services
+      - name: Set up yq for YAML processing
+        uses: mikefarah/yq@v4.27.3
+
+      - name: Get relevant services as a space-separated string
+        id: get-services
         shell: bash
-        run: echo "::set-output name=services::`jq -r 'join(" ")' <<< '${{ inputs.services }}'`"
+        run: |
+          tools=`yq -o=json '.services
+            | with_entries(select(.value.profiles.[] | contains("tools")))
+            | to_entries
+            | map(.key)' docker-compose.yml`
+          all_services=`yq -o=json '.services | keys' docker-compose.yml`
+          non_tools=`jq --null-input "${all_services} - ${tools}"`
+          input_services='${{ inputs.services }}'
+          services=`jq --null-input "${input_services} - (${input_services} - ${non_tools})"`
+          echo "services=`jq -r 'join(" ")' <<< ${services}`" >> $GITHUB_OUTPUT
 
       - name: Load docker images
         shell: bash
         run: |
-          for service in ${{ steps.parse-services.outputs.services }}; do
+          for service in ${{ steps.get-services.outputs.services }}; do
             docker load --input ${service}/${service}.tar
           done
 
@@ -261,19 +272,15 @@ jobs:
       - name: Use latest service images from ECR
         run: sed -i 's/${USER:?USER}/${{ steps.login-ecr.outputs.registry }}/' docker-compose.yml
 
-      - name: Set up yq for YAML processing
-        uses: mikefarah/yq@v4.27.3
-
       - name: Create docker-compose override and AWS credentials files
         env:
           ENCODED_CREDENTIALS: ${{ secrets.DEV_AWS_CREDENTIALS }}
         shell: bash
         run: |
           yq -n ".version = \"3.7\"" > docker-compose.override.yaml
-          for service in ${{ steps.parse-services.outputs.services }}; do
+          for service in ${{ steps.get-services.outputs.services }}; do
             yq -i ".services.${service}.image = \"${service}:ci\"" docker-compose.override.yaml
           done
-          yq eval-all --inplace 'select(fileIndex == 0) * select(fileIndex == 1)' docker-compose.override.yaml ${{ github.workspace }}/docker-compose.ci-override.yml
           echo docker-compose.override.yaml:
           cat docker-compose.override.yaml
           echo $ENCODED_CREDENTIALS | base64 -di > vault/aws_credentials
@@ -293,43 +300,32 @@ jobs:
           # Traverse depends_on values to build the unified dependency set.
           declare -A work_set # Nodes to be visited
           declare -A deps # Nodes already in the dependency set
-          uses_elasticsearch=false
           # Initialize the work set to the services from this repo.
-          for service in ${{ steps.parse-services.outputs.services }}; do
+          for service in ${{ steps.get-services.outputs.services }}; do
             work_set[${service}]=1
           done
           # While the work set is nonempty, pop and visit an arbitrary node.
           while [[ ${#work_set[@]} -gt 0 ]]; do
             keys=(${!work_set[@]})
             next=${keys[0]}
-            echo $next
-            if [ "$next" == "elasticsearch" ]; then
-              uses_elasticsearch=true
-            fi
             unset work_set[${next}]
             # Add the next node to the dependency set, and add any of its
             # unvisited dependencies to the work set.
             deps[${next}]=1
             next_deps=$(yq ".services.${next}.depends_on[]" docker-compose.yml)
-            next_deps+=($(yq ".services.${next}.depends_on[]" docker-compose.override.yaml))
-            echo $next_deps
             for next_dep in ${next_deps}; do
               if [[ ! ${deps[${next_dep}]} ]]; then
                 work_set[${next_dep}]=1
               fi
             done
           done
-          # Check if elasticsearch is a dependency
-          echo Uses elasticsearch: $uses_elasticsearch
-          echo "::set-output name=uses_elasticsearch::$uses_elasticsearch"
-          # Set dependencies output
           echo Dependencies: ${!deps[@]}
-          echo "::set-output name=deps::${!deps[@]}"
+          echo "deps=${!deps[@]}" >> $GITHUB_OUTPUT
 
       - name: Start postgres and create service databases and roles
         shell: bash
         run: |
-          docker compose up -d postgres
+          docker-compose up -d postgres
           timeout 1m bash -c 'until docker-compose run postgres pg_isready -d postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres; do sleep 1s; done'
           declare -A dbs
           conn_regex='postgres://(\w*):(\w*)@\$\{POSTGRES_SERVER\}/(\w*)'
@@ -361,22 +357,13 @@ jobs:
             fi
           done
 
-      - name: Launch elasticsearch via docker-compose
-        if: ${{ steps.parse-deps.outputs.uses_elasticsearch }}
+      - name: Launch services with dependencies via docker-compose
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         shell: bash
         run: |
-          docker-compose pull --include-deps elasticsearch
-          docker compose up -d --wait elasticsearch
-
-      - name: Launch search service via docker-compose
-        env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        shell: bash
-        run: |
-          docker-compose pull --include-deps ${{ steps.parse-services.outputs.services }}
-          docker-compose up -d ${{ steps.parse-services.outputs.services }}
+          docker-compose pull --include-deps ${{ steps.get-services.outputs.services }}
+          docker-compose up -d ${{ steps.get-services.outputs.services }}
 
       - name: Run API Proctor tests
         env:
@@ -387,14 +374,14 @@ jobs:
             -e READ_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
             -e WRITE_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
             -e NODE_ENV=ci \
-            $ECR_REGISTRY/api-proctor:pr-task-UpdateSearchDataSeeding \
+            $ECR_REGISTRY/api-proctor:latest \
             tests/${{ github.event.repository.name }}/ --testPathIgnorePatterns=/src/ --passWithNoTests
 
       - name: Docker Compose logs
         if: success() || failure()
         shell: bash
         run: |
-          for service in ${{ steps.parse-services.outputs.services }}; do
+          for service in ${{ steps.get-services.outputs.services }}; do
             echo "::group::${service} logs"
             docker-compose logs ${service}
             echo "::endgroup::"
