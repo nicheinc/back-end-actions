@@ -311,8 +311,8 @@ jobs:
             # unvisited dependencies to the work set.
             deps[${next}]=1
             next_deps=$(yq ".services.${next}.depends_on[]" docker-compose.yml)
-            next_deps+=$(yq ".services.${next}.depends_on[]" docker-compose.override.yaml)
-            echo $next_depss
+            next_deps+=($(yq ".services.${next}.depends_on[]" docker-compose.override.yaml))
+            echo $next_deps
             for next_dep in ${next_deps}; do
               if [[ ! ${deps[${next_dep}]} ]]; then
                 work_set[${next_dep}]=1
