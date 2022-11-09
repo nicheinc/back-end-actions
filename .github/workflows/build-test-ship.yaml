@@ -327,7 +327,8 @@ jobs:
             echo $override_deps
             for override_dep in ${override_deps}; do
               echo $override_dep
-              if "$override_dep" == "elasticsearch"; then
+              if [ "$override_dep" == "elasticsearch" ]; then
+                echo Made_it
                 uses_elasticsearch=true
               fi
             done
