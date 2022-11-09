@@ -14,12 +14,6 @@ on:
         description: The timeout in minutes for running API Proctor tests.
         default: 30
         type: number
-      uses_elasticsearch:
-        description: >
-          Boolean representing if the service 
-          depends upon elasticsearch or not.
-        default: false
-        type: boolean
     secrets:
       DEV_AWS_CREDENTIALS:
         required: true
@@ -252,6 +246,16 @@ jobs:
           non_tools=`jq --null-input "${all_services} - ${tools}"`
           input_services='${{ inputs.services }}'
           services=`jq --null-input "${input_services} - (${input_services} - ${non_tools})"`
+          echo tools
+          echo $tools
+          echo all_services
+          echo $all_services
+          echo non_tools
+          echo $non_tools
+          echo input_services
+          echo $input_services
+          echo services
+          echo $services
           echo "services=`jq -r 'join(" ")' <<< ${services}`" >> $GITHUB_OUTPUT
 
       - name: Load docker images
@@ -365,7 +369,7 @@ jobs:
           done
 
       - name: Launch elasticsearch via docker-compose
-        if: ${{ inputs.uses_elasticsearch }}
+        if: false
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         shell: bash
