@@ -312,6 +312,9 @@ jobs:
               fi
             done
           done
+          # Check if elasticsearch is a dependency
+          echo "::set-output name=uses_elasticsearch::[[ " ${deps[*]} " == *" elasticsearch "* ]]"
+          # Set dependencies output
           echo Dependencies: ${!deps[@]}
           echo "::set-output name=deps::${!deps[@]}"
 
@@ -356,7 +359,7 @@ jobs:
         shell: bash
         run: |
           docker-compose pull --include-deps ${{ steps.parse-services.outputs.services }}
-          docker compose up --wait -d ${{ steps.parse-services.outputs.services }}
+          docker-compose up -d ${{ steps.parse-services.outputs.services }}
 
       - name: Run API Proctor tests
         env:
