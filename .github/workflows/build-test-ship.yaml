@@ -303,7 +303,7 @@ jobs:
             keys=(${!work_set[@]})
             next=${keys[0]}
             echo $next
-            if [ "$next" == 'elasticsearch' ]; then
+            if [ "$next" == "elasticsearch" ]; then
               uses_elasticsearch=true
             fi
             unset work_set[${next}]
@@ -312,6 +312,7 @@ jobs:
             deps[${next}]=1
             next_deps=$(yq ".services.${next}.depends_on[]" docker-compose.yml)
             next_deps_override=$(yq ".services.${next}.depends_on[]" docker-compose.override.yaml)
+            echo $next_deps_override
             combined_deps=("${next_deps[@]}" "${next_deps_override[@]}")
             echo $combined_deps
             for next_dep in ${combined_deps}; do
