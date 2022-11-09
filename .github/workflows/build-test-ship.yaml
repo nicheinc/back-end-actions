@@ -247,16 +247,6 @@ jobs:
           non_tools=`jq --null-input "${all_services} - ${tools}"`
           input_services='${{ inputs.services }}'
           services=`jq --null-input "${input_services} - (${input_services} - ${non_tools})"`
-          echo tools
-          echo $tools
-          echo all_services
-          echo $all_services
-          echo non_tools
-          echo $non_tools
-          echo input_services
-          echo $input_services
-          echo services
-          echo $services
           echo "services=`jq -r 'join(" ")' <<< ${services}`" >> $GITHUB_OUTPUT
 
       - name: Load docker images
@@ -331,6 +321,16 @@ jobs:
               fi
             done
           done
+          # Check if any dependencies require elasticsearch
+          uses_elasticsearch=false
+          for dep in "${!array[@]}"; do
+            if "$dep" == "elasticsearch"; then
+              uses_elasticsearch=true
+            fi
+          done
+          echo Uses elasticsearch: $uses_elasticsearch
+          echo "::set-output name=uses_elasticsearch::$uses_elasticsearch"
+          # Set dependencies output
           echo Dependencies: ${!deps[@]}
           echo "deps=${!deps[@]}" >> $GITHUB_OUTPUT
 
@@ -370,7 +370,7 @@ jobs:
           done
 
       - name: Launch elasticsearch via docker-compose
-        if: false
+        if: ${{ steps.parse-deps.outputs.uses_elasticsearch }}
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         shell: bash
