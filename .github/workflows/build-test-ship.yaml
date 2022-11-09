@@ -313,6 +313,7 @@ jobs:
             done
           done
           # Check if elasticsearch is a dependency
+          echo Uses elasticsearch: [[ " ${deps[*]} " == *" elasticsearch "* ]]
           echo "::set-output name=uses_elasticsearch::[[ " ${deps[*]} " == *" elasticsearch "* ]]"
           # Set dependencies output
           echo Dependencies: ${!deps[@]}
