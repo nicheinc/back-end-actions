@@ -306,6 +306,7 @@ jobs:
           for service in ${{ steps.get-services.outputs.services }}; do
             work_set[${service}]=1
           done
+          uses_elasticsearch=false
           # While the work set is nonempty, pop and visit an arbitrary node.
           while [[ ${#work_set[@]} -gt 0 ]]; do
             keys=(${!work_set[@]})
@@ -320,14 +321,13 @@ jobs:
                 work_set[${next_dep}]=1
               fi
             done
-          done
-          # Check if any dependencies require elasticsearch
-          uses_elasticsearch=false
-          for dep in "${!deps[@]}"; do
-            echo $dep
-            if "$dep" == "elasticsearch"; then
-              uses_elasticsearch=true
-            fi
+            # Check if any dependencies require elasticsearch
+            override_deps = $(yq ".services.${next}.depends_on[]" docker-compose.override.yaml
+            for override_dep in ${override_deps}; do
+              if "$override_dep" == "elasticsearch"; then
+                uses_elasticsearch=true
+              fi
+            done
           done
           echo Uses elasticsearch: $uses_elasticsearch
           echo "::set-output name=uses_elasticsearch::$uses_elasticsearch"
