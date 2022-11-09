@@ -323,7 +323,8 @@ jobs:
           done
           # Check if any dependencies require elasticsearch
           uses_elasticsearch=false
-          for dep in "${!array[@]}"; do
+          for dep in "${!deps[@]}"; do
+            echo $dep
             if "$dep" == "elasticsearch"; then
               uses_elasticsearch=true
             fi
@@ -395,7 +396,7 @@ jobs:
             -e READ_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
             -e WRITE_POSTGRES_CONNECTION=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT} \
             -e NODE_ENV=ci \
-            $ECR_REGISTRY/api-proctor:latest \
+            $ECR_REGISTRY/api-proctor:pr-task-UpdateSearchDataSeeding \
             tests/${{ github.event.repository.name }}/ --testPathIgnorePatterns=/src/ --passWithNoTests
 
       - name: Docker Compose logs
