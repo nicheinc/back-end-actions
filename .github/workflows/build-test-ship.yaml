@@ -302,8 +302,8 @@ jobs:
           while [[ ${#work_set[@]} -gt 0 ]]; do
             keys=(${!work_set[@]})
             next=${keys[0]}
-            echo next
-            if [ "$next" == "elasticsearch" ]; then
+            echo $next
+            if [ "$next" == 'elasticsearch' ]; then
               uses_elasticsearch=true
             fi
             unset work_set[${next}]
