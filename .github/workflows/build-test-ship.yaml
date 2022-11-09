@@ -322,7 +322,7 @@ jobs:
               fi
             done
             # Check if any dependencies require elasticsearch
-            override_deps = $(yq ".services.${next}.depends_on[]" docker-compose.override.yaml
+            override_deps = $(yq ".services.${next}.depends_on[]" docker-compose.override.yaml)
             for override_dep in ${override_deps}; do
               if "$override_dep" == "elasticsearch"; then
                 uses_elasticsearch=true
