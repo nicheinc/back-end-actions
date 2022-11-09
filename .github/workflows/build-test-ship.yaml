@@ -293,7 +293,7 @@ jobs:
           # Traverse depends_on values to build the unified dependency set.
           declare -A work_set # Nodes to be visited
           declare -A deps # Nodes already in the dependency set
-          uses_elasticsearch="false"
+          uses_elasticsearch=false
           # Initialize the work set to the services from this repo.
           for service in ${{ steps.parse-services.outputs.services }}; do
             work_set[${service}]=1
@@ -302,8 +302,9 @@ jobs:
           while [[ ${#work_set[@]} -gt 0 ]]; do
             keys=(${!work_set[@]})
             next=${keys[0]}
-            if [[ "$next" == "elasticsearch" ]]; then
-              uses_elasticsearch="true"
+            echo next
+            if [ "$next" == "elasticsearch" ]; then
+              uses_elasticsearch=true
             fi
             unset work_set[${next}]
             # Add the next node to the dependency set, and add any of its
