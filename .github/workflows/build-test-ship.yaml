@@ -281,6 +281,7 @@ jobs:
           for service in ${{ steps.get-services.outputs.services }}; do
             yq -i ".services.${service}.image = \"${service}:ci\"" docker-compose.override.yaml
           done
+          yq eval-all --inplace 'select(fileIndex == 0) * select(fileIndex == 1)' docker-compose.override.yaml ${{ github.workspace }}/docker-compose.ci-override.yml
           echo docker-compose.override.yaml:
           cat docker-compose.override.yaml
           echo $ENCODED_CREDENTIALS | base64 -di > vault/aws_credentials
@@ -364,6 +365,7 @@ jobs:
         run: |
           docker-compose pull --include-deps ${{ steps.get-services.outputs.services }}
           docker-compose up -d ${{ steps.get-services.outputs.services }}
+          sleep 1m
 
       - name: Run API Proctor tests
         env:
