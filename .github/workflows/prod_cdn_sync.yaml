@@ -24,7 +24,7 @@ on:
         required: true
 
 jobs:
-  build:
+  prod_cdn_sync:
     name: Syncing Prod CDN
     runs-on: ubuntu-latest
     steps:
