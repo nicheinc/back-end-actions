@@ -197,11 +197,7 @@ jobs:
       fail-fast: false
       matrix:
         service: ${{ fromJson(inputs.services) }}
-    if: |
-      (github.event_name == 'pull_request' &&
-        !github.event.pull_request.draft) ||
-      (github.event_name == 'push' &&
-        steps.check-version-change.outputs.appchange == 'false')
+    if: github.event_name == 'pull_request' && !github.event.pull_request.draft
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
