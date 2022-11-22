@@ -134,7 +134,9 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      # Build and upload image artifact for use in api-proctor tests.
+      # Since jobs can't access local files produced by other jobs, we build and
+      # upload a GitHub artifact containing a TAR of the ci-tagged service
+      # image, to be downloaded in the run-api-proctor-tests job.
       - name: Build image for api-proctor tests
         uses: docker/build-push-action@v3
         with:
@@ -144,7 +146,6 @@ jobs:
           cache-to: type=gha,mode=max
           outputs: type=docker,dest=${{ matrix.service }}.tar
           tags: ${{ matrix.service }}:ci
-
       - name: Upload docker image artifact
         uses: actions/upload-artifact@v3
         with:
