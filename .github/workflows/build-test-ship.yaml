@@ -11,6 +11,10 @@ on:
           eponymous microservice itself, any associated Kafka consumers, etc.
         required: true
         type: string
+      run-api-proctor-tests:
+        description: Run the API Proctor tests associated with this repo.
+        default: true
+        type: boolean
       api-proctor-timeout-minutes:
         description: The timeout in minutes for running API Proctor tests.
         default: 30
@@ -138,6 +142,7 @@ jobs:
       # upload a GitHub artifact containing a TAR of the ci-tagged service
       # image, to be downloaded in the run-api-proctor-tests job.
       - name: Build image for api-proctor tests
+        if: inputs.run-api-proctor-tests
         uses: docker/build-push-action@v3
         with:
           context: .
@@ -147,6 +152,7 @@ jobs:
           outputs: type=docker,dest=${{ matrix.service }}.tar
           tags: ${{ matrix.service }}:ci
       - name: Upload docker image artifact
+        if: inputs.run-api-proctor-tests
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.service }}
@@ -220,6 +226,7 @@ jobs:
 
   run-api-proctor-tests:
     name: Run API Proctor tests
+    if: inputs.run-api-proctor-tests
     runs-on: ubuntu-latest
     needs: build-and-ship-images
     timeout-minutes: ${{ inputs.api-proctor-timeout-minutes }}
