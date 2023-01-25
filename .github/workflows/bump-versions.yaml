@@ -1,17 +1,10 @@
-name: Bump versions
+name: Bump chart and/or app versions
 permissions:
   contents: write
   pull-requests: write
 on:
   workflow_call:
     inputs:
-      services:
-        description: >
-          Auto bump chart and app versions in the version.env file based on commit message.
-          Default behavior is to bump chart by a patch if it is not specified but Update-versions is.
-          Commit must start with "Update-versions " and can include app <major|minor|patch> chart <major|minor|patch>
-        required: true
-        type: string
       bypass-dev-protections:
         description: >
           Use custom user to override branch protections when
@@ -19,6 +12,9 @@ on:
         required: false
         default: false
         type: boolean
+    secrets:
+      PUSH_CHARTS_TOKEN:
+        required: false
 
 jobs:
   # Increment the APP and CHART versions based on commit message starting with Update-versions 
