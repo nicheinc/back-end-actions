@@ -1,0 +1,116 @@
+name: Bump versions
+permissions:
+  contents: write
+  pull-requests: write
+on:
+  workflow_call:
+    inputs:
+      services:
+        description: >
+          Auto bump chart and app versions in the version.env file based on commit message.
+          Default behavior is to bump chart by a patch if it is not specified but Update-versions is.
+          Commit must start with "Update-versions " and can include app <major|minor|patch> chart <major|minor|patch>
+        required: true
+        type: string
+      bypass-dev-protections:
+        description: >
+          Use custom user to override branch protections when
+          pushing directly to dev
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  # Increment the APP and CHART versions based on commit message starting with Update-versions 
+  bump-versions:
+    name: Get supported Go versions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Calculate desired version changes
+        id: get-new-versions
+        run: |
+          . version.env
+          outputs=""
+          for commit in ${{ github.event.push.commits }}; do
+            if [[ "${commit.message}" == *"Update-versions "* ]]; then
+              # Get outputs in form of chart:major/minor/patch app:major/minor/patch
+              outputs=$( echo "${commit.message}" | sed -rn "s/Update-versions (app|chart) (\w+)( (app|chart) (\w+))?/\1:\2 \4:\5/p" | sed "s/ ://" )
+              # Support the default case which is patch chart version
+              if [[ "$outputs" != *"chart:" ]]; then
+                  outputs="$outputs chart:patch"
+              fi
+              echo( "Using $outputs versions from commit message ${commit.message}" )
+              break
+            fi
+          done
+          
+          # Check both chart and app for version changes and bump accordingly 
+          vers=( chart app )
+          for i in "${vers[@]}"; do
+              if [ "$i" = "chart" ]; then
+                  version=$CHARTVERSION
+              else
+                  version=$APPVERSION
+              fi
+              rNumRegex='^r[[:digit:]]+$'
+              semRegex='^[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+$'
+              # If versioning follows pattern r123 where 123 is any set of digits
+              if [[ $version =~ $rNumRegex ]]; then
+                  echo "Version fits pattern r123 where 123 are any digits"
+                  # If the versioning is r123 format, ignore patch/major/minor as it can only be a +1
+                  echo "outputs: ${outputs}"
+                  if [[ "${outputs}" == *"${i}:"* ]]; then
+                      newVers="${version:1}"
+                      ((newVers++))
+                      printf -v version 'r%d' "$((newVers))"
+                  fi
+              # If versioning follows semantic versioning pattern like 0.12.23
+              elif [[ $version =~ $semRegex ]]; then
+                  echo "Version uses semantic versioning"
+                  echo "original: $version"
+                  IFS=. read -r major minor patch <<<"$version"
+                  if [[ "${outputs}" == *"${i}:patch"* ]]; then
+                      ((patch++))
+                  elif [[ "${outputs}" == *"${i}:minor"* ]]; then
+                      ((minor++))
+                      patch="0"
+                  elif [[ "${outputs}" == *"${i}:major"* ]]; then
+                      ((major++))
+                      patch="0"
+                      minor="0"
+                  fi
+                  printf -v version '%d.%d.%d' "$((major))" "$((minor))" "$((patch))"
+              else echo "${version} did not match regex pattern for 1.2.3 or r123"
+              fi
+
+              if [ "$i" = "chart" ]; then
+                  echo "new chart vers: ${version}"
+                  echo "::set-output name=newChartversion::${version}"
+              else
+                  echo "new app vers: ${version}"
+                  echo "::set-output name=newAppversion::${version}"
+              fi
+          done
+      - name: Update Versions in version.env
+        id: update-versions
+        run: |
+          sed -i 's/^APPVERSION=.*/APPVERSION='${APPVERSION}'/' .version.env
+          sed -i 's/^CHARTVERSION=.*/CHARTVERSION='${CHARTVERSION}'/' .version.env
+        env:
+          APPVERSION:  ${{ steps.get-new-versions.outputs.newAppversion }}
+          CHARTVERSION: ${{ steps.get-new-versions.outputs.newChartversion }}
+      - name: Push Helm Chart Updates
+        id: push-chart-versions
+        if: |
+          github.event_name == 'push'
+        run: |
+          . version.env
+          if ! git diff --quiet; then
+            git config --global user.name github-actions
+            git config --global user.email ""
+            git add -A
+            git commit -m "[skip ci] Updating version.env with appversion ${APPVERSION}, chartversion ${CHARTVERSION}"
+            git push
+          fi
