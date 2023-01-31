@@ -49,7 +49,7 @@ jobs:
               if [[ $outputs =~ $chartRegex && $outputs =~ $appRegex ]]; then
                 validRequest=true
               fi
-              echo( "Using $outputs versions from commit message ${commit.message}" )
+              echo "Using $outputs versions from commit message ${commit.message}"
               break
             fi
           done
