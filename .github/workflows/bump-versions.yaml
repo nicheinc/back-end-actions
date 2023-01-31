@@ -18,6 +18,10 @@ on:
         required: false
         default: false
         type: boolean
+    outputs:
+      versions-changed-by-ci:
+        description: "If the commit message was valid and the versions will change; 'true' or 'false'"
+        value: ${{ jobs.parseVersionChangeRequest.validRequest }}
     secrets:
       PUSH_CHARTS_TOKEN:
         required: false
