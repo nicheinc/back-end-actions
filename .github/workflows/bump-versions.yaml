@@ -42,14 +42,14 @@ jobs:
           for commit in ${{join(github.event.commits.*.message, ', ') }}; do
             if [[ "${commit}" == *"update-versions "* ]]; then
               # Get outputs in form of chart:major/minor/patch app:major/minor/patch
-              outputs=$( echo "${commit.message}" | sed -rn "s/Update-versions (app|chart) (\w+)( (app|chart) (\w+))?/\1:\2 \4:\5/p" | sed "s/ ://" )
+              outputs=$( echo "${commit}" | sed -rn "s/update-versions (app|chart) (\w+)( (app|chart) (\w+))?/\1:\2 \4:\5/p" | sed "s/ ://" )
               # Verify that both app and chart are specified
               chartRegex='chart:(major|minor|patch)'
               appRegex='app:(major|minor|patch)'
               if [[ $outputs =~ $chartRegex && $outputs =~ $appRegex ]]; then
                 validRequest=true
               fi
-              echo "Using $outputs versions from commit message ${commit.message}"
+              echo "Using $outputs versions from commit message ${commit}"
               break
             fi
           done
