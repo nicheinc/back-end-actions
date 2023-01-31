@@ -38,7 +38,7 @@ jobs:
         run: |
           . version.env
           outputs=""
-          validRequest="false"
+          validRequest=false
           for commit in ${{ github.event.push.commits }}; do
             if [[ "${commit.message}" == *"update-versions "* ]]; then
               # Get outputs in form of chart:major/minor/patch app:major/minor/patch
@@ -47,7 +47,7 @@ jobs:
               chartRegex='chart:(major|minor|patch)'
               appRegex='app:(major|minor|patch)'
               if [[ $outputs =~ $chartRegex && $outputs =~ $appRegex ]]; then
-                validRequest="true"
+                validRequest=true
               fi
               echo( "Using $outputs versions from commit message ${commit.message}" )
               break
@@ -59,7 +59,7 @@ jobs:
     name: Parse Version change request
     runs-on: ubuntu-latest
     needs: parseVersionChangeRequest
-    if: needs.parseVersionChangeRequest.outputs.validRequest == "true"
+    if: needs.parseVersionChangeRequest.outputs.validRequest == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
