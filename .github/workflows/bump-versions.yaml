@@ -121,8 +121,8 @@ jobs:
         env:
           APPVERSION: ${{ steps.get-new-versions.outputs.newAppversion }}
           CHARTVERSION: ${{ steps.get-new-versions.outputs.newChartversion }}
-      - name: Push Helm Chart Updates
-        id: push-chart-versions
+      - name: Push Version File Updates
+        id: push-updated-versions
         if: |
           github.event_name == 'push'
         run: |
