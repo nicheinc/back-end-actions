@@ -65,7 +65,6 @@ jobs:
         id: get-new-versions
         run: |
           . version.env
-          outputs=${{needs.parseVersionChangeRequest.outputs.requestPattern}}
           # Check both chart and app for version changes and bump accordingly 
           vers=( chart app )
           for i in "${vers[@]}"; do
@@ -112,13 +111,15 @@ jobs:
               echo "newAppversion=${version}" >> $GITHUB_OUTPUT
             fi
           done
+        env:
+          outputs: ${{needs.parseVersionChangeRequest.outputs.requestPattern}}
       - name: Update Versions in version.env
         id: update-versions
         run: |
           sed -i 's/^APPVERSION=.*/APPVERSION='${APPVERSION}'/' version.env
           sed -i 's/^CHARTVERSION=.*/CHARTVERSION='${CHARTVERSION}'/' version.env
         env:
-          APPVERSION:  ${{ steps.get-new-versions.outputs.newAppversion }}
+          APPVERSION: ${{ steps.get-new-versions.outputs.newAppversion }}
           CHARTVERSION: ${{ steps.get-new-versions.outputs.newChartversion }}
       - name: Push Helm Chart Updates
         id: push-chart-versions
