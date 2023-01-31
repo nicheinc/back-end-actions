@@ -39,8 +39,8 @@ jobs:
           . version.env
           outputs=""
           validRequest=false
-          for commit in ${{ github.event.commits }}; do
-            if [[ "${commit.message}" == *"update-versions "* ]]; then
+          for commit in ${{join(github.event.commits.*.message, ', ') }}; do
+            if [[ "${commit}" == *"update-versions "* ]]; then
               # Get outputs in form of chart:major/minor/patch app:major/minor/patch
               outputs=$( echo "${commit.message}" | sed -rn "s/Update-versions (app|chart) (\w+)( (app|chart) (\w+))?/\1:\2 \4:\5/p" | sed "s/ ://" )
               # Verify that both app and chart are specified
