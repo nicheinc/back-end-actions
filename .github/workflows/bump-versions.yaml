@@ -82,7 +82,7 @@ jobs:
               echo "outputs: ${outputs}"
               if [[ "${outputs}" == *"${i}:"* ]]; then
                 newVers="${version:1}"
-                ((newVers++))
+                ((newVers+=1))
                 printf -v version 'r%d' "$((newVers))"
               fi
             # If versioning follows semantic versioning pattern like 0.12.23
@@ -91,12 +91,12 @@ jobs:
               echo "original: $version"
               IFS=. read -r major minor patch <<<"$version"
               if [[ "${outputs}" == *"${i}:patch"* ]]; then
-                ((patch++))
+                ((patch+=1))
               elif [[ "${outputs}" == *"${i}:minor"* ]]; then
-                ((minor++))
+                ((minor+=1))
                 patch="0"
               elif [[ "${outputs}" == *"${i}:major"* ]]; then
-                ((major++))
+                ((major+=1))
                 patch="0"
                 minor="0"
               fi
