@@ -39,7 +39,7 @@ jobs:
           . version.env
           outputs=""
           validRequest=false
-          for commit in ${{github.event.commits[@]}}; do
+          for commit in ${{github.event.commits}}; do
             echo "$commit"
             echo "$commit.message"
             if [[ "${commit}" == *"update-versions "* ]]; then
