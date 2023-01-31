@@ -1,5 +1,5 @@
 # Bump app and chart versions in the version.env file at the top level of the repo
-# by minor major or patch as specified based off a commit message.
+# by minor major or patch as specified based off the last commit message.
 # Versions in the version.env can be in form 0.1.2 or r123
 # If in the form r123 the major|patch|minor is ignored for a +1 operation
 
@@ -39,22 +39,18 @@ jobs:
           . version.env
           outputs=""
           validRequest=false
-          for commit in ${${{github.event.commits}}[@]}; do
-            echo "$commit"
-            echo "$commit.message"
-            if [[ "${commit}" == *"update-versions "* ]]; then
-              # Get outputs in form of chart:major/minor/patch app:major/minor/patch
-              outputs=$( echo "${commit}" | sed -rn "s/update-versions (app|chart) (\w+)( (app|chart) (\w+))?/\1:\2 \4:\5/p" | sed "s/ ://" )
-              # Verify that both app and chart are specified
-              chartRegex='chart:(major|minor|patch)'
-              appRegex='app:(major|minor|patch)'
-              if [[ $outputs =~ $chartRegex && $outputs =~ $appRegex ]]; then
-                validRequest=true
-              fi
-              echo "Using $outputs versions from commit message ${commit}"
-              break
+          commit=$(git log -1 --pretty=format:"%s")
+          if [[ "${commit}" == *"update-versions "* ]]; then
+            # Get outputs in form of chart:major/minor/patch app:major/minor/patch
+            outputs=$( echo "${commit}" | sed -rn "s/update-versions (app|chart) (\w+)( (app|chart) (\w+))?/\1:\2 \4:\5/p" | sed "s/ ://" )
+            # Verify that both app and chart are specified
+            chartRegex='chart:(major|minor|patch)'
+            appRegex='app:(major|minor|patch)'
+            if [[ $outputs =~ $chartRegex && $outputs =~ $appRegex ]]; then
+              validRequest=true
             fi
-          done
+            echo "Using $outputs versions from commit message ${commit}"
+          fi
           echo "requestPattern=${outputs}" >> $GITHUB_OUTPUT
           echo "validRequest=${validRequest}" >> $GITHUB_OUTPUT
   changeVersions:
