@@ -47,7 +47,8 @@ on:
         type: boolean
       checkout-ref:
         description:
-          Specify a branch to checkout
+          Specify a branch, tag, or SHA to checkout documented
+          at https://github.com/actions/checkout
         required: false
         default: ''
         type: string
@@ -72,14 +73,14 @@ jobs:
       github.event_name == 'release'
     steps:
       # Checkout as github-actions for normal workflow
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         if: |
           !inputs.bypass-dev-protections
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ inputs.checkout-ref }}
       # Checkout as given token to bypass branch protections
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         if: |
           inputs.bypass-dev-protections
         with:
