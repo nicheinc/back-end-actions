@@ -21,7 +21,7 @@ on:
     outputs:
       versions-changed-by-ci:
         description: "If the commit message was valid and the versions will change; 'true' or 'false'"
-        value: ${{ jobs.parseVersionChangeRequest.validRequest }}
+        value: ${{ jobs.parseVersionChangeRequest.outputs.validRequest }}
     secrets:
       PUSH_CHARTS_TOKEN:
         required: false
