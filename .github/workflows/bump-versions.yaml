@@ -2,6 +2,7 @@
 # by minor major or patch as specified based off the last commit message.
 # Versions in the version.env can be in form 0.1.2 or r123
 # If in the form r123 the major|patch|minor is ignored for a +1 operation
+# Will only update versions on a push event, if not returns versions-changed-by-ci as false
 
 # Example commit message: update-versions app patch chart patch
 name: Bump chart and/or app versions
@@ -29,7 +30,7 @@ on:
 jobs:
   # Increment the APP and CHART versions based on commit message starting with update-versions 
   parseVersionChangeRequest:
-    name: Parse Version change request
+    name: Parse version changes
     runs-on: ubuntu-latest
     outputs:
       requestPattern: ${{ steps.validate-commit.outputs.requestPattern }}
@@ -50,18 +51,23 @@ jobs:
             # Verify that both app and chart are specified
             chartRegex='chart:(major|minor|patch)'
             appRegex='app:(major|minor|patch)'
-            if [[ $outputs =~ $chartRegex && $outputs =~ $appRegex ]]; then
+            # Can only update versions on pull request when chart and app are specified
+            if [[ $outputs =~ $chartRegex && $outputs =~ $appRegex && $EVENTNAME == 'push' ]]; then
               validRequest=true
             fi
             echo "Using $outputs versions from commit message ${commit}"
           fi
           echo "requestPattern=${outputs}" >> $GITHUB_OUTPUT
           echo "validRequest=${validRequest}" >> $GITHUB_OUTPUT
+        env:
+          EVENTNAME: ${{ github.event_name }}
   changeVersions:
-    name: Parse Version change request
+    name: Update versions
     runs-on: ubuntu-latest
     needs: parseVersionChangeRequest
-    if: needs.parseVersionChangeRequest.outputs.validRequest == 'true'
+    if: |
+      (github.event_name == 'push' &&
+        needs.parseVersionChangeRequest.outputs.validRequest == 'true')
     steps:
       - name: Checkout
         uses: actions/checkout@v2
