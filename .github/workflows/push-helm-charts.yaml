@@ -45,6 +45,13 @@ on:
         required: false
         default: false
         type: boolean
+      checkout-ref:
+        description:
+          Specify a branch, tag, or SHA to checkout documented
+          at https://github.com/actions/checkout
+        required: false
+        default: ''
+        type: string
     secrets:
       ECR_ACCESS_KEY_ID:
         required: true
@@ -66,17 +73,19 @@ jobs:
       github.event_name == 'release'
     steps:
       # Checkout as github-actions for normal workflow
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         if: |
           !inputs.bypass-dev-protections
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ inputs.checkout-ref }}
       # Checkout as given token to bypass branch protections
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         if: |
           inputs.bypass-dev-protections
         with:
           token: ${{ secrets.PUSH_CHARTS_TOKEN }}
+          ref: ${{ inputs.checkout-ref }}
 
       # If the chart version changed we need to reflect it in the chart(s).
       # Also reflects app changes if both change in the same PR.
