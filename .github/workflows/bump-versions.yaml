@@ -37,7 +37,7 @@ jobs:
       validRequest: ${{ steps.validate-commit.outputs.validRequest }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Validate commit message
         id: validate-commit
         run: |
@@ -70,7 +70,7 @@ jobs:
         needs.parseVersionChangeRequest.outputs.validRequest == 'true')
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Calculate desired version changes
         id: get-new-versions
         run: |
