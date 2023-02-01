@@ -45,6 +45,12 @@ on:
         required: false
         default: false
         type: boolean
+      checkout-ref:
+        description:
+          Specify a branch to checkout
+        required: false
+        default: ''
+        type: string
     secrets:
       ECR_ACCESS_KEY_ID:
         required: true
@@ -71,12 +77,14 @@ jobs:
           !inputs.bypass-dev-protections
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ inputs.checkout-ref }}
       # Checkout as given token to bypass branch protections
       - uses: actions/checkout@v2
         if: |
           inputs.bypass-dev-protections
         with:
           token: ${{ secrets.PUSH_CHARTS_TOKEN }}
+          ref: ${{ inputs.checkout-ref }}
 
       # If the chart version changed we need to reflect it in the chart(s).
       # Also reflects app changes if both change in the same PR.
