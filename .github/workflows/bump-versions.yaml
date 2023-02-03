@@ -69,8 +69,18 @@ jobs:
       (github.event_name == 'push' &&
         needs.parseVersionChangeRequest.outputs.validRequest == 'true')
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      # Checkout as github-actions for normal workflow
+      - uses: actions/checkout@v3
+        if: |
+          !inputs.bypass-dev-protections
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      # Checkout as given token to bypass branch protections
+      - uses: actions/checkout@v3
+        if: |
+          inputs.bypass-dev-protections
+        with:
+          token: ${{ secrets.PUSH_CHARTS_TOKEN }}
       - name: Calculate desired version changes
         id: get-new-versions
         run: |
