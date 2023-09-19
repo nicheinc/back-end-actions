@@ -86,6 +86,9 @@ jobs:
       chartversion: ${{ steps.check-version-change.outputs.chartversion }}
       appchange: ${{ steps.check-version-change.outputs.appchange }}
       chartchange: ${{ steps.check-version-change.outputs.chartchange }}
+      prBody: ${{ github.event.pull_request.body }}
+      prNumber: ${{ github.event.pull_request.number }}
+      prURL: ${{ github.event.pull_request.url }}
     strategy:
       fail-fast: false
       matrix:
@@ -210,6 +213,7 @@ jobs:
         id: create-service-release
         uses: ncipollo/release-action@3d2de22e3d0beab188d8129c27f103d8e91bf13a
         with:
+          body: ${{ needs.build-and-ship-image.outputs.prBody }}
           tag: "${{ needs.build-and-ship-image.outputs.appversion }}"
           token: ${{ secrets.GITHUB_TOKEN }}
 
