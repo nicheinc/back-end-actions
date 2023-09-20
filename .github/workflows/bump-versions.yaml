@@ -94,7 +94,7 @@ jobs:
               version=$APPVERSION
             fi
             rNumRegex='^r[[:digit:]]+$'
-            semRegex='^[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+$'
+            semRegex='^v[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+$'
             # If versioning follows pattern r123 where 123 is any set of digits
             if [[ $version =~ $rNumRegex ]]; then
               echo "Version fits pattern r123 where 123 are any digits"
@@ -109,7 +109,8 @@ jobs:
             elif [[ $version =~ $semRegex ]]; then
               echo "Version uses semantic versioning"
               echo "original: $version"
-              IFS=. read -r major minor patch <<<"$version"
+              newVers="${version:1}"
+              IFS=. read -r major minor patch <<<"$newVers"
               if [[ "${outputs}" == *"${i}:patch"* ]]; then
                 ((patch+=1))
               elif [[ "${outputs}" == *"${i}:minor"* ]]; then
@@ -120,7 +121,7 @@ jobs:
                 patch="0"
                 minor="0"
               fi
-              printf -v version '%d.%d.%d' "$((major))" "$((minor))" "$((patch))"
+              printf -v version 'v%d.%d.%d' "$((major))" "$((minor))" "$((patch))"
             else echo "${version} did not match regex pattern for 1.2.3 or r123"
             fi
             if [ "$i" = "chart" ]; then
