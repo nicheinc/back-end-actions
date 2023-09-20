@@ -122,7 +122,7 @@ jobs:
                 minor="0"
               fi
               printf -v version 'v%d.%d.%d' "$((major))" "$((minor))" "$((patch))"
-            else echo "${version} did not match regex pattern for 1.2.3 or r123"
+            else echo "${version} did not match regex pattern for v1.2.3 or r123"
             fi
             if [ "$i" = "chart" ]; then
               echo "new chart vers: ${version}"
