@@ -59,11 +59,28 @@ jobs:
           if [[ "${commit}" == *"update-versions "* ]]; then
             # Get outputs in form of chart:major/minor/patch app:major/minor/patch
             outputs=$( echo "${commit}" | sed -rn "s/update-versions (app|chart) (\w+)( (app|chart) (\w+))?/\1:\2 \4:\5/p" | sed "s/ ://" )
-            # Verify that both app and chart are specified
+            # Verify that chart is specified
             chartRegex='chart:(major|minor|patch)'
             appRegex='app:(major|minor|patch)'
-            # Can only update versions on pull request when chart and app are specified
-            if [[ $outputs =~ $chartRegex && $outputs =~ $appRegex && $EVENTNAME == 'push' ]]; then
+
+            # 'chart' must be defined and valid
+            if [[ $outputs =~ $chartRegex ]]; then
+              chartOK=true
+            else
+              echo "bad or missing value for 'chart'"
+              chartOK=false
+            fi
+
+            # if 'app' is provided, it must be valid
+            if [[ $outputs =~ $appRegex || ! $outputs =~ 'app:' ]]; then
+              appOK=true
+            else
+              echo "bad value for 'app'"
+              appOK=false
+            fi
+
+            # Can only update versions on pull request when chart is specified
+            if $chartOK && $appOK && [[ $EVENTNAME == 'push' ]]; then
               validRequest=true
             fi
             echo "Using $outputs versions from commit message ${commit}"
