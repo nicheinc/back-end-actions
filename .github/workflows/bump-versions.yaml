@@ -93,15 +93,15 @@ jobs:
             else
               version=$APPVERSION
             fi
+            echo "original: $version"
             rNumRegex='^r[[:digit:]]+$'
             semRegex='^[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+$'
             # if version starts with 'v', remove it so versions like 'v1.2.3' and '1.2.3' can be parsed the same way
             if [[ $version = v* ]]; then
               startsWithV=true
-              newVers="${version:1}"
+              version="${version:1}"
             else
               startsWithV=false
-              newVers=$version
             fi
 
             # If versioning follows pattern r123 where 123 is any set of digits
@@ -115,10 +115,9 @@ jobs:
                 printf -v version 'r%d' "$((newVers))"
               fi
             # If versioning follows semantic versioning pattern like 0.12.23
-            elif [[ $newVers =~ $semRegex ]]; then
+            elif [[ $version =~ $semRegex ]]; then
               echo "Version uses semantic versioning"
-              echo "original: $version"
-              IFS=. read -r major minor patch <<<"$newVers"
+              IFS=. read -r major minor patch <<<"$version"
               if [[ "${outputs}" == *"${i}:patch"* ]]; then
                 ((patch+=1))
               elif [[ "${outputs}" == *"${i}:minor"* ]]; then
@@ -129,10 +128,9 @@ jobs:
                 patch="0"
                 minor="0"
               fi
+              printf -v version '%d.%d.%d' "$((major))" "$((minor))" "$((patch))"
               if $startsWithV; then
-                printf -v version 'v%d.%d.%d' "$((major))" "$((minor))" "$((patch))"
-              else
-                printf -v version '%d.%d.%d' "$((major))" "$((minor))" "$((patch))"
+                printf -v version 'v%s' $version
               fi
             else echo "${version} did not match regex pattern for 1.2.3, v1.2.3, or r123"
             fi
