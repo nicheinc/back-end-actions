@@ -37,7 +37,7 @@ jobs:
       - name: Add Label
         uses: actions-ecosystem/action-add-labels@v1
         with:
-          labels: update-versions-compatible
+          labels: merge-and-release-extension-compatible
 
   # Increment the APP and CHART versions based on commit message starting with update-versions 
   parseVersionChangeRequest:
