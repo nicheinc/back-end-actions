@@ -32,7 +32,7 @@ jobs:
   labelPR:
     name: Label PR for update-versions
     runs-on: ubuntu-latest
-    if: ${{ github.event.pull_request.opened == 'true' }}
+    if: github.event.pull_request.opened
     steps:
       - name: Add Label
         uses: actions-ecosystem/action-add-labels@v1
