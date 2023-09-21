@@ -28,6 +28,15 @@ on:
         required: false
 
 jobs:
+  #label PR as being compatible with the `update-versions` command
+  labelPR:
+    if: ${{ github.event.pull_request.opened == 'true' }}
+    steps:
+      - name: add label
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: update-versions-compatible
+
   # Increment the APP and CHART versions based on commit message starting with update-versions 
   parseVersionChangeRequest:
     name: Parse version changes
