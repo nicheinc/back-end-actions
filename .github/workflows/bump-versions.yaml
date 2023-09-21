@@ -30,9 +30,11 @@ on:
 jobs:
   #label PR as being compatible with the `update-versions` command
   labelPR:
+    name: Label PR for update-versions
+    runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.opened == 'true' }}
     steps:
-      - name: add label
+      - name: Add Label
         uses: actions-ecosystem/action-add-labels@v1
         with:
           labels: update-versions-compatible
