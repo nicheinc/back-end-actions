@@ -189,6 +189,7 @@ jobs:
           tag: "helm-chart-${{ inputs.chartversion }}"
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
+          body: appversion ${{ inputs.appversion }}
 
       # Notify in Slack
       - name: Post Helm Chart Prerelease to Slack
