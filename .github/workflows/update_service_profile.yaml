@@ -39,7 +39,7 @@ jobs:
           rm -rf "/tmp/linkerd"
       - name: Create Service Profile
         run: |
-          linkerd profile --open-api ./openapi/openapi.yaml ${{ inputs.service }} --ignore-cluster > charts/${{ inputs.service }/templates/serviceprofile.yaml
+          linkerd profile --open-api ./openapi/openapi.yaml ${{ inputs.service }} --ignore-cluster > charts/${{ inputs.service }}/templates/serviceprofile.yaml
       - name: Push Helm Chart Updates
         run: |
           if ! git diff --quiet; then
