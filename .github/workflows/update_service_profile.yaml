@@ -1,0 +1,51 @@
+name: Push Helm Charts
+permissions:
+  contents: write
+  pull-requests: write
+on:
+  workflow_call:
+    inputs:
+      checkout-ref:
+        description:
+          Specify a branch, tag, or SHA to checkout documented
+          at https://github.com/actions/checkout
+        required: false
+        default: ''
+        type: string
+      service:
+        description:
+          Service Name
+        required: true
+        type: string
+    secrets:
+      LINKERD_VERSION:
+        required: true
+      PUSH_CHARTS_TOKEN:
+        required: true
+jobs:
+  update-service-profile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PUSH_CHARTS_TOKEN }}
+          ref: ${{ inputs.checkout-ref }}
+      - name: Install Linkerd
+        run: |
+          mkdir -p "/tmp/linkerd"
+          curl -Lo "/tmp/linkerd/linkerd" "https://github.com/linkerd/linkerd2/releases/download/stable-${{ secrets.LINKERD_VERSION}}/linkerd2-cli-stable-${{ secrets.LINKERD_VERSION }}-linux-amd64"
+          chmod +x "/tmp/linkerd/linkerd"
+          sudo mv "/tmp/linkerd/linkerd" /usr/local/bin/linkerd
+          rm -rf "/tmp/linkerd"
+      - name: Create Service Profile
+        run: |
+          linkerd profile --open-api ./openapi/openapi.yaml ${{ inputs.service }} --ignore-cluster > charts/${{ inputs.service }/templates/serviceprofile.yaml
+      - name: Push Helm Chart Updates
+        run: |
+          if ! git diff --quiet; then
+            git config --global user.name github-actions
+            git config --global user.email ""
+            git add -A
+            git commit -m "[skip ci] Updating Service Profile from Open Api"
+            git push
+          fi
