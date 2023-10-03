@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           token: ${{ secrets.PUSH_CHARTS_TOKEN }}
-          ref: ${{ inputs.checkout-ref }}
+          ref: ${{ github.event.pull_request.head.ref }}
       - name: Install Linkerd
         run: |
           mkdir -p "/tmp/linkerd"
@@ -37,9 +37,7 @@ jobs:
           chmod +x "/tmp/linkerd/linkerd"
       - name: Create Service Profile
         run: |
-          /tmp/linkerd/linkerd profile --open-api ./openapi/openapi.yaml ${{ inputs.service }} --ignore-cluster > charts/${{ inputs.service }}/templates/serviceprofile.yaml
-          ls charts/${{ inputs.service }}/templates
-          cat charts/${{ inputs.service }}/templates/serviceprofile.yaml
+          /tmp/linderd/linkerd profile --open-api ./openapi/openapi.yaml ${{ inputs.service }} --ignore-cluster > charts/${{ inputs.service }}/templates/serviceprofile.yaml
       - name: Push Helm Chart Updates
         run: |
           git diff
@@ -48,5 +46,5 @@ jobs:
             git config --global user.email ""
             git add -A
             git commit -m "[skip ci] Updating Service Profile from Open Api"
-            git push
+            git push origin ${{ github.event.pull_request.head.ref }}
           fi
