@@ -37,7 +37,7 @@ jobs:
           chmod +x "/tmp/linkerd/linkerd"
       - name: Create Service Profile
         run: |
-          /tmp/linderd/linkerd profile --open-api ./openapi/openapi.yaml ${{ inputs.service }} --ignore-cluster > charts/${{ inputs.service }}/templates/serviceprofile.yaml
+          /tmp/linkerd/linkerd profile --open-api ./openapi/openapi.yaml ${{ inputs.service }} --ignore-cluster > charts/${{ inputs.service }}/templates/serviceprofile.yaml
       - name: Push Helm Chart Updates
         run: |
           git diff
