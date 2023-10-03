@@ -1,4 +1,4 @@
-name: Push Helm Charts
+name: Update Service Profile
 permissions:
   contents: write
   pull-requests: write
