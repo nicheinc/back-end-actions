@@ -35,11 +35,9 @@ jobs:
           mkdir -p "/tmp/linkerd"
           curl -Lo "/tmp/linkerd/linkerd" "https://github.com/linkerd/linkerd2/releases/download/stable-${{ secrets.LINKERD_VERSION}}/linkerd2-cli-stable-${{ secrets.LINKERD_VERSION }}-linux-amd64"
           chmod +x "/tmp/linkerd/linkerd"
-          sudo mv "/tmp/linkerd/linkerd" /usr/local/bin/linkerd
-          rm -rf "/tmp/linkerd"
       - name: Create Service Profile
         run: |
-          linkerd profile --open-api ./openapi/openapi.yaml ${{ inputs.service }} --ignore-cluster > charts/${{ inputs.service }}/templates/serviceprofile.yaml
+          /tmp/linkerd/linkerd profile --open-api ./openapi/openapi.yaml ${{ inputs.service }} --ignore-cluster > charts/${{ inputs.service }}/templates/serviceprofile.yaml
       - name: Push Helm Chart Updates
         run: |
           git diff
