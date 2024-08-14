@@ -111,6 +111,8 @@ jobs:
           inputs.bypass-dev-protections
         with:
           token: ${{ secrets.PUSH_CHARTS_TOKEN }}
+      - name: Get latest changes
+        run: git pull
       - name: Calculate desired version changes
         id: get-new-versions
         run: |
