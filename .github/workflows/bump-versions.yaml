@@ -30,7 +30,7 @@ on:
 jobs:
   #label PR as being compatible with the `update-versions` command
   labelPR:
-    name: Add or remove "merge-and-release-extension-compatible" label
+    name: Set "merge-and-release-extension-compatible" label
     runs-on: ubuntu-latest
     if: |
       ${{ github.event_name == 'pull_request' }}
@@ -54,8 +54,8 @@ jobs:
       - name: Add label
         # Run only if label does not yet exist and version.env has not been changed
         if: |
-          ${{ steps.changed-version-env.outputs.any_changed != 'true' }}
-          && contains( github.event.pull_request.labels.*.name, 'merge-and-release-extension-compatible')
+          ${{ !steps.changed-version-env.outputs.any_changed }}
+          && !contains( github.event.pull_request.labels.*.name, 'merge-and-release-extension-compatible')
         uses: actions-ecosystem/action-add-labels@v1
         with:
           labels: merge-and-release-extension-compatible
@@ -63,7 +63,7 @@ jobs:
       - name: Remove label
         # Run only if label already exists and version.env has been changed
         if: |
-          ${{ steps.changed-version-env.outputs.any_changed == 'true' }}
+          ${{ steps.changed-version-env.outputs.any_changed }}
           && contains( github.event.pull_request.labels.*.name, 'merge-and-release-extension-compatible')
         uses: actions-ecosystem/action-remove-labels@v1
         with:
