@@ -30,12 +30,42 @@ on:
 jobs:
   #label PR as being compatible with the `update-versions` command
   labelPR:
-    name: Label PR for update-versions
+    name: Add or remove "merge-and-release-extension-compatible" label
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'pull_request' && github.event.action == 'opened' }}
+    if: |
+      ${{ github.event_name == 'pull_request' }}
+      && (
+        ${{ github.event.action == 'opened' }}
+        || ${{ github.event.action == 'synchronize' }}
+      )
     steps:
-      - name: Add Label
+      - name: Checkout repo
+        uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+    
+      - name: Check if version.env already has changes
+        id: changed-version-env
+        if: github.event_name != 'release'
+        uses: tj-actions/changed-files@467e54813892b0cf302b0bba54d233c861b97f1a
+        with:
+          files: 'version.env'
+
+      - name: Add label
+        # Run only if label does not yet exist and version.env has not been changed
+        if: |
+          ${{ steps.changed-version-env.outputs.any_changed != 'true' }}
+          && contains( github.event.pull_request.labels.*.name, 'merge-and-release-extension-compatible')
         uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: merge-and-release-extension-compatible
+
+      - name: Remove label
+        # Run only if label already exists and version.env has been changed
+        if: |
+          ${{ steps.changed-version-env.outputs.any_changed == 'true' }}
+          && contains( github.event.pull_request.labels.*.name, 'merge-and-release-extension-compatible')
+        uses: actions-ecosystem/action-remove-labels@v1
         with:
           labels: merge-and-release-extension-compatible
 
