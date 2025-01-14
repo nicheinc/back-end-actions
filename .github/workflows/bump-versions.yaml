@@ -54,7 +54,7 @@ jobs:
       - name: Add label
         # Run only if label does not yet exist and version.env has not been changed
         if: |
-          !steps.changed-version-env.outputs.any_changed
+          steps.changed-version-env.outputs.any_changed == 'false'
           && !contains( github.event.pull_request.labels.*.name, 'merge-and-release-extension-compatible')
         uses: actions-ecosystem/action-add-labels@v1
         with:
@@ -63,7 +63,7 @@ jobs:
       - name: Remove label
         # Run only if label already exists and version.env has been changed
         if: |
-          steps.changed-version-env.outputs.any_changed
+          steps.changed-version-env.outputs.any_changed == 'true'
           && contains( github.event.pull_request.labels.*.name, 'merge-and-release-extension-compatible')
         uses: actions-ecosystem/action-remove-labels@v1
         with:
@@ -72,7 +72,7 @@ jobs:
       - name: Output debug logs
         run: |
           echo "version_env_changed=${{ steps.changed-version-env.outputs.any_changed }}"
-          echo "labels=${{ github.event.pull_request.labels.*.name }}"
+          echo "labels=${{ toJSON(github.event.pull_request.labels.*.name) }}"
           echo "labels_contain_mnr=${{ contains( github.event.pull_request.labels.*.name, 'merge-and-release-extension-compatible') }}"
 
   # Increment the APP and CHART versions based on commit message starting with update-versions 
