@@ -30,7 +30,7 @@ on:
 jobs:
   #label PR as being compatible with the `update-versions` command
   labelPR:
-    name: Set "merge-and-release-extension-compatible" label
+    name: Set merge-and-release-extension-compatible label
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'pull_request'
